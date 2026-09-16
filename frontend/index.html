@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VINÉRA - Dự Đoán Chất Lượng Rượu Vang</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/global.css">
+</head>
+<body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i data-lucide="wine" class="logo-icon"></i>
+            <div>
+                <h1 class="logo-text">VINAHOME</h1>
+                <p class="logo-sub">Wine Quality Intelligence</p>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item"><i data-lucide="layout-dashboard"></i> Tổng quan</a>
+            <a href="#" class="nav-item active"><i data-lucide="activity"></i> Dự đoán chất lượng</a>
+            <a href="#" class="nav-item"><i data-lucide="bar-chart-3"></i> Phân tích dữ liệu</a>
+            <a href="#" class="nav-item"><i data-lucide="brain"></i> Mô hình ML</a>
+            <a href="#" class="nav-item"><i data-lucide="history"></i> Lịch sử dự đoán</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="dataset-info">
+                <span class="info-label">Dataset</span>
+                <p>Wine Quality <span class="badge">11 Features</span></p>
+            </div>
+            <div class="system-status">
+                <div class="status-dot"></div>
+                <span>Model Online</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <main class="main-content">
+        <!-- TOP BAR -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <div class="breadcrumb">Dashboard / Dự đoán chất lượng</div>
+                <h2 class="page-title">Wine Quality Prediction</h2>
+                <p class="page-subtitle">Phân tích các đặc trưng hóa học và dự đoán chất lượng rượu vang bằng Machine Learning.</p>
+            </div>
+            <div class="top-bar-right">
+                <div class="status-badge"><span class="dot"></span> Model Online</div>
+                <button class="btn-info"><i data-lucide="info" style="width:16px; height:16px;"></i> Model Info</button>
+            </div>
+        </header>
+
+        <!-- HERO SECTION -->
+        <div class="hero-card">
+            <div class="hero-content">
+                <span class="hero-label">MACHINE LEARNING · WINE QUALITY</span>
+                <h2 class="hero-title">Dự đoán chất lượng rượu vang</h2>
+                <p class="hero-subtitle">Nhập các thông số hóa học của mẫu rượu để hệ thống phân loại và dự đoán mức chất lượng.</p>
+                <div class="hero-stats">
+                    <span>Model: Random Forest</span> • 
+                    <span>Dataset: Wine Quality</span> • 
+                    <span>Features: 11</span>
+                </div>
+            </div>
+            <div class="hero-illustration">
+                <i data-lucide="flask-conical" class="flask-icon"></i>
+            </div>
+        </div>
+
+        <!-- KHU VỰC NHẬP DỮ LIỆU -->
+        <section class="form-section">
+            <div class="section-header">
+                <h3>Thông số mẫu rượu</h3>
+                <p>Nhập các thông số hóa học để thực hiện dự đoán.</p>
+            </div>
+
+            <form id="prediction-form">
+                <div class="form-grid">
+                    <div class="input-card">
+                        <label>Fixed Acidity <i data-lucide="info" class="info-icon" title="Lượng acid cố định"></i></label>
+                        <div class="input-wrapper">
+                            <input type="number" step="0.1" name="fixed_acidity" id="f_fixed_acidity" required>
+                            <span class="unit">g/dm³</span>
+                        </div>
+                    </div>
+                    <div class="input-card">
+                        <label>Volatile Acidity <i data-lucide="info" class="info-icon" title="Acid bay hơi"></i></label>
+                        <div class="input-wrapper">
+                            <input type="number" step="0.01" name="volatile_acidity" id="f_volatile_acidity" required>
+                            <span class="unit">g/dm³</span>
+                        </div>
+                    </div>
+                    <div class="input-card">
+                        <label>Citric Acid <i data-lucide="info" class="info-icon" title="Acid citric"></i></label>
+                        <div class="input-wrapper">
+                            <input type="number" step="0.01" name="citric_acid" id="f_citric_acid" required>
+                            <span class="unit">g/dm³</span>
+                        </div>
+                    </div>
+                    <div class="input-card">
+                        <label>Residual Sugar <i data-lucide="info" class="info-icon" title="Đường dư"></i></label>
+                        <div class="input-wrapper">
+                            <input type="number" step="0.1" name="residual_sugar" id="f_residual_sugar" required>
+                            <span class="unit">g/dm³</span>
+                        </div>
+                    </div>
+                    <div class="input-card">
+                        <label>Chlorides <i data-lucide="info" class="info-icon" title="Muối clorua"></i></label>
+                        <div class="input-wrapper">
+                            <input type="number" step="0.001" name="chlorides" id="f_chlorides" required>
+                            <span class="unit">g/dm³</span>
+                        </div>
+                    </div>
+                    <div class="input-card">
+                        <label>Free SO₂ <i data-lucide="info" class="info-icon"></i></label>
+                        <div class="input-wrapper">
+                            <input type="number" step="1" name="free_sulfur_dioxide" id="f_free_sulfur_dioxide" required>
+                            <span class="unit">mg/dm³</span>
+                        </div>
+                    </div>
+                    <div class="input-card">
+                        <label>Total SO₂ <i data-lucide="info" class="info-icon"></i></label>
+                        <div class="input-wrapper">
+                            <input type="number" step="1" name="total_sulfur_dioxide" id="f_total_sulfur_dioxide" required>
+                            <span class="unit">mg/dm³</span>
+                        </div>
+                    </div>
+                    <div class="input-card">
+                        <label>Density <i data-lucide="info" class="info-icon"></i></label>
+                        <div class="input-wrapper">
+                            <input type="number" step="0.0001" name="density" id="f_density" required>
+                            <span class="unit">g/cm³</span>
+                        </div>
+                    </div>
+                    <div class="input-card">
+                        <label>pH <i data-lucide="info" class="info-icon"></i></label>
+                        <div class="input-wrapper">
+                            <input type="number" step="0.01" name="pH" id="f_pH" required>
+                            <span class="unit"></span>
+                        </div>
+                    </div>
+                    <div class="input-card">
+                        <label>Sulphates <i data-lucide="info" class="info-icon"></i></label>
+                        <div class="input-wrapper">
+                            <input type="number" step="0.01" name="sulphates" id="f_sulphates" required>
+                            <span class="unit">g/dm³</span>
+                        </div>
+                    </div>
+                    <div class="input-card">
+                        <label>Alcohol <i data-lucide="info" class="info-icon"></i></label>
+                        <div class="input-wrapper">
+                            <input type="number" step="0.1" name="alcohol" id="f_alcohol" required>
+                            <span class="unit">% vol</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <div class="action-left">
+                        <button type="reset" class="btn-outline" onclick="hideResult()">Đặt lại</button>
+                        <button type="button" class="btn-outline" onclick="fillSampleData()">Điền dữ liệu mẫu</button>
+                    </div>
+                    <button type="submit" class="btn-primary" id="btn-predict">
+                        <i data-lucide="sparkles" id="btn-icon"></i> <span id="btn-text">Dự đoán chất lượng</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- KHU VỰC KẾT QUẢ (Mặc định ẩn) -->
+        <section id="result-section" class="result-section hidden">
+            <div class="result-card">
+                <!-- Cột trái: Kết quả -->
+                <div class="result-left">
+                    <span class="res-label">PREDICTION RESULT</span>
+                    <h3 class="res-title">Chất lượng rượu: <span style="color: var(--status-good);">TỐT</span></h3>
+                    
+                    <div class="score-row">
+                        <div class="score-circle">7 <span style="font-size: 14px; color: #746B67;">/ 10</span></div>
+                        <div class="confidence-box">
+                            <div class="conf-text">Confidence <strong>87.4%</strong></div>
+                            <div class="progress-bg"><div class="progress-fill" style="width: 87.4%;"></div></div>
+                            <span class="badge-high">High Confidence</span>
+                        </div>
+                    </div>
+
+                    <!-- Visual Scale -->
+                    <div class="quality-scale-container">
+                        <div class="scale-line"></div>
+                        <div class="scale-labels">
+                            <span>Poor (3-4)</span>
+                            <span>Average (5-6)</span>
+                            <span style="font-weight:bold; color:var(--deep-wine);">Good (7)</span>
+                            <span>Excellent (8-9)</span>
+                        </div>
+                        <div class="scale-marker" style="left: 65%;">
+                            <div class="marker-dot"></div>
+                            <div class="marker-value">7</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Phân tích -->
+                <div class="result-right">
+                    <span class="res-label">PREDICTION ANALYSIS</span>
+                    <h4 class="analysis-title">Top influencing features</h4>
+                    
+                    <div class="feature-bar-item">
+                        <div class="fb-info"><span>Alcohol</span> <span>28%</span></div>
+                        <div class="fb-bg"><div class="fb-fill" style="width: 28%; background: var(--deep-wine);"></div></div>
+                    </div>
+                    <div class="feature-bar-item">
+                        <div class="fb-info"><span>Sulphates</span> <span>21%</span></div>
+                        <div class="fb-bg"><div class="fb-fill" style="width: 21%; background: var(--wine-red);"></div></div>
+                    </div>
+                    <div class="feature-bar-item">
+                        <div class="fb-info"><span>Volatile Acidity</span> <span>17%</span></div>
+                        <div class="fb-bg"><div class="fb-fill" style="width: 17%; background: #A86470;"></div></div>
+                    </div>
+                    <div class="feature-bar-item">
+                        <div class="fb-info"><span>Citric Acid</span> <span>12%</span></div>
+                        <div class="fb-bg"><div class="fb-fill" style="width: 12%; background: #C58B94;"></div></div>
+                    </div>
+                    <div class="feature-bar-item">
+                        <div class="fb-info"><span>Density</span> <span>9%</span></div>
+                        <div class="fb-bg"><div class="fb-fill" style="width: 9%; background: #DFB5BA;"></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Kịch bản JavaScript -->
+    <script>
+        lucide.createIcons(); // Hiển thị icons
+
+        // Hàm điền dữ liệu mẫu (Một chai rượu ngon điểm 7)
+        function fillSampleData() {
+            document.getElementById('f_fixed_acidity').value = 7.3;
+            document.getElementById('f_volatile_acidity').value = 0.65;
+            document.getElementById('f_citric_acid').value = 0.00;
+            document.getElementById('f_residual_sugar').value = 1.2;
+            document.getElementById('f_chlorides').value = 0.065;
+            document.getElementById('f_free_sulfur_dioxide').value = 15;
+            document.getElementById('f_total_sulfur_dioxide').value = 21;
+            document.getElementById('f_density').value = 0.9946;
+            document.getElementById('f_pH').value = 3.39;
+            document.getElementById('f_sulphates').value = 0.47;
+            document.getElementById('f_alcohol').value = 10.0;
+            hideResult(); // Ẩn kết quả cũ đi
+        }
+
+        function hideResult() {
+            document.getElementById('result-section').classList.add('hidden');
+        }
+
+        // Xử lý sự kiện bấm nút Dự đoán
+        document.getElementById('prediction-form').addEventListener('submit', function(e) {
+            e.preventDefault(); // Chặn tải lại trang
+            
+            const btn = document.getElementById('btn-predict');
+            const icon = document.getElementById('btn-icon');
+            const text = document.getElementById('btn-text');
+            const resultSection = document.getElementById('result-section');
+
+            // Hiệu ứng đang tải (Loading)
+            resultSection.classList.add('hidden');
+            btn.style.opacity = '0.8';
+            text.innerText = "Đang phân tích...";
+            icon.setAttribute('data-lucide', 'loader-2');
+            icon.classList.add('spin-anim');
+            lucide.createIcons();
+
+            // Giả lập API gọi Model (Đợi 1.5 giây để ra kết quả)
+            // Tuần sau bạn sẽ thay bằng hàm fetch('/predict') thực sự
+            setTimeout(() => {
+                btn.style.opacity = '1';
+                text.innerText = "Dự đoán chất lượng";
+                icon.setAttribute('data-lucide', 'sparkles');
+                icon.classList.remove('spin-anim');
+                lucide.createIcons();
+
+                // Hiển thị bảng kết quả
+                resultSection.classList.remove('hidden');
+                
+                // Cuộn chuột từ từ xuống bảng kết quả
+                resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 1500);
+        });
+    </script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
