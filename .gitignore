@@ -1,0 +1,11 @@
+# Bỏ qua môi trường ảo
+.venv/
+
+# Bỏ qua cache của Python
+__pycache__/
+
+# Bỏ qua file tạm của Jupyter Notebook
+.ipynb_checkpoints/
+
+# Bỏ qua thư mục chứa dữ liệu thô (có dung lượng lớn)
+data/raw/
