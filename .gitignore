@@ -8,4 +8,4 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Bỏ qua thư mục chứa dữ liệu thô (có dung lượng lớn)
-data/raw/
+
