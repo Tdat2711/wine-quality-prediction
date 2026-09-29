@@ -3,7 +3,7 @@
 ## Phạm vi
 
 - Nguồn: `data/raw/winemag-data-130k-v2.csv`.
-- Đầu ra: `data/processed/wine_missing_values_handled.csv`.
+- Đầu ra: `data/interim/01_missing_handled.csv`.
 - Code tái lập: `src/handle_missing_values.py`.
 - Chỉ xử lý 9 cột có giá trị thiếu. Không xóa dòng, không xử lý duplicate,
   khoảng trắng, kiểu dữ liệu hoặc outlier.

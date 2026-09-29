@@ -148,8 +148,10 @@ def process_dataset(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Any]]:
         result["vintage_year"] = result["title"].apply(extract_clean_vintage)
         stats["vintages_extracted"] = int(result["vintage_year"].notna().sum())
 
-    # 5. Correct data entry errors
+    # 5. Preserve original prices and audit verified corrections.
+    result["price_original"] = result["price"]
     stats["corrections"] = correct_data_entry_errors(result)
+    result["price_was_corrected"] = result["price"].ne(result["price_original"])
 
     # 6. Apply Log Transform for Machine Learning
     result["log_price"] = np.log1p(result["price"])
