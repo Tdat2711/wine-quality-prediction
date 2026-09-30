@@ -32,7 +32,7 @@ if sys.platform == "win32":
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = PROJECT_ROOT / "data" / "raw" / "winemag-data-130k-v2.csv"
 DEFAULT_OUTPUT = (
-    PROJECT_ROOT / "data" / "processed" / "wine_outliers_noise_handled.csv"
+    PROJECT_ROOT / "data" / "interim" / "04_outliers_noise_handled.csv"
 )
 
 
@@ -174,7 +174,7 @@ def parse_args() -> argparse.Namespace:
         "--output",
         type=Path,
         default=DEFAULT_OUTPUT,
-        help="Path to output processed CSV file.",
+        help="Path to output interim CSV file.",
     )
     return parser.parse_args()
 

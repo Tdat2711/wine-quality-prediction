@@ -16,7 +16,7 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = PROJECT_ROOT / "data" / "raw" / "winemag-data-130k-v2.csv"
 DEFAULT_OUTPUT = (
-    PROJECT_ROOT / "data" / "processed" / "wine_missing_values_handled.csv"
+    PROJECT_ROOT / "data" / "interim" / "01_missing_handled.csv"
 )
 
 MISSING_COLUMNS = (
