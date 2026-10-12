@@ -19,7 +19,7 @@ Web/API chỉ được xem xét sau khi các đầu ra trên hoàn thành.
 
 | Thành viên | Vai trò chính | Vai trò hỗ trợ |
 |---|---|---|
-| Khánh | Nhóm trưởng, integration, baseline, QA | Điều phối deadline và reproducibility |
+| Khánh | Nhóm trưởng, data split, regression baseline, integration | QA, điều phối deadline và reproducibility |
 | Đạt | Data pipeline, validation, model-ready data | Test và kiểm tra leakage |
 | Đô | EDA, visualization, error analysis | Chuẩn hóa hình ảnh báo cáo |
 | Dương | Statistical inference, ethics, bias | Viết phương pháp và limitations |
@@ -33,11 +33,11 @@ Vai trò chính không có nghĩa một người sở hữu riêng một thư m�
 
 | ID | Người làm | Người review | Nhiệm vụ | Đầu ra | Phụ thuộc | Điều kiện hoàn thành |
 |---|---|---|---|---|---|---|
-| W5-K1 | Khánh | Dương | Chốt problem statement, target, metric, seed và quy tắc khóa test | Mục “Experimental protocol” trong báo cáo tuần | Không | Target là `points`; MAE chính; RMSE và \(R^2\) phụ; seed và split được ghi rõ |
+| W5-K1 | Khánh | Dương | Chốt experimental protocol, trực tiếp tạo split 70/15/15 và chạy Linear Regression baseline | `src/split_data.py` hoặc notebook split có thể tái tạo; bảng metric Linear | Cleaning pipeline | Target là `points`; seed và indices tái tạo được; không overlap; preprocessing chỉ fit train; có MAE/RMSE/\(R^2\) trên validation |
 | W5-Da1 | Đạt | Khánh | Kiểm tra schema, missing, duplicate và xác định cột model-ready | Báo cáo validation và đặc tả feature ban đầu | Cleaning pipeline | Có số dòng/cột, danh sách feature được dùng/loại và lý do |
 | W5-Do1 | Đô | Dũng | EDA `points`, `price`, `log_price`, quốc gia và variety | `notebooks/02_eda.ipynb` và hình nháp | File cleaned | Notebook chạy từ đầu; mỗi biểu đồ có tiêu đề, trục và kết luận |
 | W5-Du1 | Dương | Đạt | Đánh giá missingness còn lại, đặt câu hỏi và giả thuyết thống kê | Phần inference plan trong báo cáo tuần | W5-Da1 | Có ít nhất ba giả thuyết, biến, kiểm định dự kiến và giả định |
-| W5-Dg1 | Dũng | Đô | Xây Dummy, Linear và Ridge baseline trên train/validation | Notebook/script baseline và bảng validation | W5-K1, W5-Da1 | Cùng split và preprocessing; báo cáo MAE/RMSE/\(R^2\); chưa đọc test |
+| W5-Dg1 | Dũng | Đô | Xây Dummy và Ridge baseline, sau đó ghép kết quả với Linear baseline của Khánh | Notebook/script baseline và bảng so sánh validation | W5-K1, W5-Da1 | Cùng split và preprocessing; báo cáo MAE/RMSE/\(R^2\); chưa đọc test |
 
 **Deadline:** cuối tuần 5.
 
@@ -49,7 +49,7 @@ Vai trò chính không có nghĩa một người sở hữu riêng một thư m�
 
 | ID | Người làm | Người review | Nhiệm vụ | Đầu ra | Phụ thuộc | Điều kiện hoàn thành |
 |---|---|---|---|---|---|---|
-| W6-K1 | Khánh | Đạt | Tích hợp preprocessing và model bằng `Pipeline`/`ColumnTransformer`; thiết lập CV chung | Khung experiment dùng chung | W5-K1, W5-Da1 | Không fit preprocessing ngoài train; mọi model dùng cùng folds/seed |
+| W6-K1 | Khánh | Đạt | Trực tiếp tích hợp preprocessing và Linear/Ridge bằng `Pipeline`/`ColumnTransformer`; chạy khung CV chung | Module/khung experiment dùng chung và bảng CV Linear/Ridge | W5-K1, W5-Da1 | Không fit preprocessing ngoài train; mọi model dùng cùng folds/seed; lệnh chạy được từ project root |
 | W6-Da1 | Đạt | Dương | Xử lý categorical cardinality, rare categories, missing indicator và đặc trưng giá/vintage | Module feature engineering và data validation | W5-Da1 | Transformation xác định rõ; không dùng target để tạo feature |
 | W6-Do1 | Đô | Khánh | Hoàn thiện tối thiểu năm biểu đồ trả lời câu hỏi nghiên cứu | Hình trong `reports/figures/` và caption | W5-Do1 | Hình đọc được, thống nhất style, có insight và không lặp ý |
 | W6-Du1 | Dương | Đô | Thực hiện tối thiểu ba phân tích/kiểm định thống kê | `notebooks/03_statistical_inference.ipynb` | W5-Du1 | Kiểm tra giả định, effect size/CI khi phù hợp, không chỉ báo p-value |
@@ -59,13 +59,30 @@ Vai trò chính không có nghĩa một người sở hữu riêng một thư m�
 
 **Gate cuối tuần:** có pipeline không leakage, năm biểu đồ đạt chuẩn, ba phân tích thống kê và bảng CV công bằng.
 
+### Mốc kiểm tra thứ Tư và thuyết trình thứ Năm
+
+Do có buổi kiểm tra vào thứ Tư và thuyết trình vào thứ Năm tuần sau, nhóm áp dụng lịch rút gọn sau:
+
+- Hoàn thành toàn bộ gate tuần 5 trước cuối tuần này.
+- Hoàn thành phần cốt lõi tuần 6 trước tối thứ Ba: năm biểu đồ, 1–2 kiểm định thống kê, preprocessing pipeline và CV cho các baseline.
+- Khóa số liệu và slide vào tối thứ Ba; thứ Tư chỉ kiểm tra, ghi nhận góp ý và sửa lỗi nhỏ.
+- Không mở test set, không tuning sâu và không làm web trước buổi thuyết trình.
+
+Phần kỹ thuật Khánh phải trực tiếp trình bày trong buổi kiểm tra gồm:
+
+1. Cách tạo split 70/15/15 và kiểm tra không overlap.
+2. Vì sao preprocessing chỉ được fit trên train.
+3. Cách xây Linear Regression baseline.
+4. Kết quả MAE, RMSE và \(R^2\) trên validation.
+5. Cách tích hợp preprocessing và model trong một pipeline tái lập được.
+
 ## 5. Tuần 7 — Tuning, error analysis và chọn mô hình
 
 **Mục tiêu tuần:** chọn mô hình bằng validation/CV, đồng thời hiểu mô hình sai ở đâu.
 
 | ID | Người làm | Người review | Nhiệm vụ | Đầu ra | Phụ thuộc | Điều kiện hoàn thành |
 |---|---|---|---|---|---|---|
-| W7-K1 | Khánh | Dũng | Chủ trì model review và lập decision record chọn mô hình | Bảng quyết định mô hình | Kết quả tuần 6 | Quyết định dựa trên metric, độ ổn định, khả năng giải thích và chi phí chạy |
+| W7-K1 | Khánh | Dũng | Chạy feature-group ablation, chủ trì model review và lập decision record | Bảng ablation và quyết định mô hình | Kết quả tuần 6 | So sánh ít nhất price-only, metadata-only và combined; quyết định dựa trên metric, độ ổn định, khả năng giải thích và chi phí chạy |
 | W7-Da1 | Đạt | Khánh | Audit data leakage, split overlap và reproducibility | Leakage checklist và test bổ sung | W6-K1 | Không có record overlap; cùng seed tái tạo cùng split/kết quả trong tolerance |
 | W7-Do1 | Đô | Dương | Phân tích residual và sai số theo country, variety và price band | `notebooks/04_error_analysis.ipynb` và hình | Prediction validation | Có residual distribution, actual-vs-predicted và group error table |
 | W7-Du1 | Dương | Đạt | Phân tích bias/ethics và soạn model card bản đầu | Model card draft | W7-Do1 | Nêu intended use, excluded use, subgroup risks và limitations |
@@ -97,7 +114,7 @@ Vai trò chính không có nghĩa một người sở hữu riêng một thư m�
 
 | ID | Người làm | Người review | Nhiệm vụ | Đầu ra | Phụ thuộc | Điều kiện hoàn thành |
 |---|---|---|---|---|---|---|
-| W9-K1 | Khánh | Dương | Xác nhận checklist rồi cho phép mở test đúng một lần; quản lý model freeze | Biên bản test evaluation và version freeze | Gate tuần 8 | Ghi thời điểm, commit, config và người chạy; không tuning sau test |
+| W9-K1 | Khánh | Dương | Tạo experiment manifest, xác nhận checklist rồi cho phép mở test đúng một lần; đóng gói model freeze | Manifest, biên bản test evaluation và version freeze | Gate tuần 8 | Ghi checksum, commit, config, feature list, thời điểm và người chạy; không tuning sau test |
 | W9-Da1 | Đạt | Đô | Audit dữ liệu, split và checksum cuối | Final data audit | W8-Da1 | Kích thước split, schema và checksum khớp cấu hình đã khóa |
 | W9-Do1 | Đô | Dũng | Tạo biểu đồ test/residual cuối và thay hình nháp | Figures cuối | Test predictions | Không cherry-pick subgroup để làm đẹp kết quả; caption đúng metric |
 | W9-Du1 | Dương | Khánh | Hoàn thiện model card, ethics, bias và limitations | Model card/report hoàn chỉnh | W9-Da1, W9-Do1 | Nêu rõ rủi ro tổng quát hóa và giới hạn dữ liệu |
