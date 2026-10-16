@@ -27,3 +27,20 @@ Các con số dưới đây được tính trên file raw và chưa qua làm s�
 - `Unique` không tính giá trị rỗng.
 - Kiểu “chuỗi” có thể hiển thị là `object` hoặc `str` tùy phiên bản pandas; ý nghĩa dữ liệu không đổi.
 - Data dictionary này chỉ mô tả dữ liệu. Mọi quyết định sửa/xóa phải được ghi vào cleaning log.
+
+## Các trường trong cleaned data và vai trò thí nghiệm
+
+File `data/processed/wine_cleaned_final.csv` sau loại trùng có 119.988 dòng × 19 cột. `price` còn 8.395 giá trị thiếu; mẫu chính có 111.593 dòng giá quan sát. Dữ liệu raw ở bảng trên không bị sửa.
+
+| Trường | Cách tạo / ý nghĩa | Vai trò |
+|---|---|---|
+| `points` | Điểm do người đánh giá chấm | Target; không phải chất lượng khách quan |
+| `log_price` | `log1p(price)` với giá quan sát, thiếu nếu `price` thiếu | Feature duy nhất của tầng chỉ giá |
+| `country`, `province`, `variety`, `vintage_year` | Metadata sản phẩm; năm trích có quy tắc từ `title` | Feature của tầng metadata và tầng kết hợp |
+| `price_original` | Giá trước hai sửa lỗi nhập đã biết, kể cả trạng thái thiếu | Audit, không đưa vào model |
+| `price_was_missing` | Giá thiếu ở dòng đã làm sạch | Audit và chọn mẫu, không đưa vào model |
+| `price_was_corrected` | Một trong hai giá đã sửa có lưu dấu | Audit, không đưa vào model |
+| `title` | Tiêu đề, chuẩn hóa chữ thường/khoảng trắng khi chia nhóm | Chống title-group overlap; không đưa nguyên văn vào model |
+| `description`, `taster_name`, `taster_twitter_handle` | Nội dung/người review | Audit, kiểm tra bias; không làm predictor chính |
+
+Các nhãn phân loại thiếu như `Unknown` là giá trị quy ước theo từng dòng; không suy luận quốc gia hoặc tỉnh từ ánh xạ học trên toàn bộ dữ liệu trước split.

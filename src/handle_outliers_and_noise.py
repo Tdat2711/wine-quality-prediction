@@ -4,7 +4,8 @@ This module addresses:
 1. Outliers in `price`:
    - Distinguishes valid luxury wines (natural outliers) from data entry errors.
    - Corrects verified data entry errors (Blair 2013 and Chateau les Ormes Sorbet).
-   - Generates `log_price` transformation for machine learning algorithms.
+   - Records which prices were missing and generates `log_price` only for
+     observed prices; missing prices are excluded from the main experiment.
 2. Noise in text and metadata:
    - Cleans HTML entities (&amp;, &eacute;, etc.) and non-breaking spaces (\xa0).
    - Flags non-informative reviews (< 10 words, e.g. importer notes).
@@ -149,11 +150,15 @@ def process_dataset(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Any]]:
         stats["vintages_extracted"] = int(result["vintage_year"].notna().sum())
 
     # 5. Preserve original prices and audit verified corrections.
+    result["price_was_missing"] = result["price"].isna()
     result["price_original"] = result["price"]
     stats["corrections"] = correct_data_entry_errors(result)
-    result["price_was_corrected"] = result["price"].ne(result["price_original"])
+    result["price_was_corrected"] = (
+        result["price_original"].notna()
+        & result["price"].ne(result["price_original"])
+    )
 
-    # 6. Apply Log Transform for Machine Learning
+    # 6. Apply the deterministic transform; missing values remain missing.
     result["log_price"] = np.log1p(result["price"])
     stats["skewness_after_log"] = float(result["log_price"].dropna().skew())
 

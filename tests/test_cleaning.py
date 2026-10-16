@@ -10,10 +10,33 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from clean_consistency import enforce_consistency
 from clean_duplicates import find_possible_logical_duplicates, remove_duplicates
+from handle_missing_values import handle_missing_values
 from handle_outliers_and_noise import process_dataset
 
 
 class CleaningTests(unittest.TestCase):
+    def test_missing_price_is_preserved_without_cross_row_inference(self):
+        source = pd.DataFrame(
+            {
+                "country": ["France", None],
+                "designation": [None, None],
+                "price": [20.0, None],
+                "province": ["Bordeaux", None],
+                "region_1": [None, None],
+                "region_2": [None, None],
+                "taster_name": ["A", None],
+                "taster_twitter_handle": [None, None],
+                "variety": ["Merlot", None],
+                "winery": ["Same", "Same"],
+                "description": ["review", "review"],
+            }
+        )
+        cleaned, report = handle_missing_values(source)
+        self.assertTrue(pd.isna(cleaned.loc[1, "price"]))
+        self.assertEqual(cleaned.loc[1, "country"], "Unknown")
+        self.assertEqual(cleaned.loc[1, "province"], "Unknown")
+        self.assertEqual(report["price_left_missing"], 1)
+
     def test_country_code_us_is_preserved(self):
         source = pd.DataFrame({"country": ["US", " Us ", "France"]})
         cleaned, report = enforce_consistency(source)
@@ -55,6 +78,19 @@ class CleaningTests(unittest.TestCase):
         self.assertEqual(cleaned["price_was_corrected"].sum(), 2)
         self.assertEqual(report["corrections"]["blair_2013"], 1)
         self.assertEqual(report["corrections"]["chateau_ormes_sorbet"], 1)
+
+    def test_outlier_step_does_not_mark_missing_price_as_corrected(self):
+        source = pd.DataFrame(
+            {
+                "title": ["Unknown wine", "Known wine"],
+                "description": ["A tasting review", "Another tasting review"],
+                "price": [float("nan"), 20.0],
+            }
+        )
+        cleaned, _ = process_dataset(source)
+        self.assertTrue(bool(cleaned.loc[0, "price_was_missing"]))
+        self.assertFalse(bool(cleaned.loc[0, "price_was_corrected"]))
+        self.assertTrue(pd.isna(cleaned.loc[0, "log_price"]))
 
 
 if __name__ == "__main__":
