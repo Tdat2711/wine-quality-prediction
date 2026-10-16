@@ -1,161 +1,61 @@
 # Roadmap dự án — Tuần 5 đến tuần 10
 
-## 1. Bối cảnh và mục tiêu cuối kỳ
+## Tuần 5 đến trước buổi đánh giá tiến trình thứ Tư tuần 6
 
-Hiện tại là tuần thực tế thứ 5. Cuối tuần này, nhóm đã học đến nội dung Regression Analysis trong bộ slide mười tuần đầu. Cleaning pipeline đã tương đối hoàn chỉnh; phần còn thiếu là EDA có hệ thống, statistical inference, feature engineering, modeling, error/bias analysis và báo cáo cuối.
+| Người phụ trách | Nhiệm vụ |
+|---|---|
+| Khánh | Chốt câu hỏi hai tầng. Tự viết code chia các chai có giá thành bốn khoảng theo tứ phân vị; xuất bảng số chai, giá trung vị và `points` trung vị, viết 2–3 nhận xét có số liệu. Tự làm slide và trình bày phần giá–điểm; nhận slide đã làm của từng người để ghép và kiểm tra mạch chung. |
+| Đạt | Cleaning pipeline và cleaning log đã có, không làm lại. Từ dữ liệu sạch, lập bảng quy tắc chọn mẫu: số chai có/thiếu giá và số chai có nhãn `points`. Tạo bảng trước/sau cleaning với số dòng, duplicate và hai giá sửa để tự trình bày quyết định xử lý dữ liệu. |
+| Đô | Viết code tạo hai hình: phân bố `price` và quan hệ giá–điểm. Đưa hai hình lên slide; mỗi hình ghi số mẫu, trục/đơn vị và một kết luận mà mình tự trình bày. |
+| Dương | Viết phần giới thiệu theo bối cảnh → vấn đề → câu hỏi → hướng giải quyết. Tự tính bảng trung bình, trung vị, tứ phân vị của `points` và `price`, tạo một hình phân bố `points`; dùng chúng để trình bày mục tiêu, ý nghĩa thực tế và giới hạn của điểm review. |
+| Dũng | Lập bảng ý nghĩa, tỷ lệ thiếu và số nhóm của `price`, `country`, `province`, `variety`, `vintage_year`. Làm một slide giải thích bốn cấu hình dự kiến và tự trình bày; ghi rõ chưa có metric mô hình. |
 
-Mục tiêu cuối kỳ là một quy trình có thể tái lập để dự đoán `points` trên bộ Wine Reviews 130k, kèm theo:
+## Tuần 6 — Tiếp tục sau buổi đánh giá tiến trình
 
-- Dữ liệu model-ready và phương pháp chia dữ liệu cố định.
-- Baseline và ít nhất một mô hình mạnh hơn được so sánh công bằng.
-- MAE là metric chính; RMSE và \(R^2\) là metric phụ.
-- Phân tích residual và sai số theo nhóm dữ liệu.
-- Báo cáo về bias, ethics và limitations.
-- README, báo cáo, slide và code có thể chạy lại.
+| Người phụ trách | Nhiệm vụ |
+|---|---|
+| Khánh | Ghi góp ý của giảng viên và sửa câu hỏi nghiên cứu nếu cần. Trên các chai có giá quan sát, tạo split/holdout mới theo nhóm tên chai, không dùng lại holdout seed 42 từng chạy thử; công bố số dòng từng tập. Trên train, lập bảng `points` trung vị theo khoảng giá trong 2–3 quốc gia đủ mẫu. |
+| Đạt | Dựa trên bảng chọn mẫu tuần 5, tự so sánh `points` trung vị và tỷ lệ các quốc gia phổ biến giữa nhóm có giá với nhóm thiếu giá. Viết nhận xét sơ bộ về khả năng mẫu chỉ có giá không đại diện cho toàn bộ dữ liệu. |
+| Đô | Chuyển hai hình giá–điểm đã làm thành code chạy lại; sau khi có split mới, dùng tập train để thêm một hình so sánh trong các nhóm đủ mẫu và sửa hình theo góp ý. |
+| Dương | Từ thống kê mô tả và góp ý, viết một trang câu chuyện dữ liệu: điều đã quan sát, câu hỏi còn mở và giới hạn; tách rõ phát hiện sơ bộ với giả thuyết sẽ kiểm định sau. |
+| Dũng | Trên tập train sau split, tự lập bảng cho các quốc gia và giống nho phổ biến: số chai, giá trung vị, `points` trung vị. Ghi nhóm nào quá ít mẫu và đề xuất metadata đáng phân tích sâu ở tuần 7. |
 
-Web/API chỉ được xem xét sau khi các đầu ra trên hoàn thành.
+## Tuần 7 — Trực quan hóa và phân tích khám phá
 
-## 2. Vai trò ổn định
+| Người phụ trách | Nhiệm vụ |
+|---|---|
+| Khánh | Từ bảng thăm dò tuần 6, viết phần EDA riêng: trên tập train, tính số mẫu và điểm trung vị theo bốn khoảng giá cho các quốc gia đủ mẫu; đối chiếu xu hướng chung với từng quốc gia và giải thích điểm giống/khác. |
+| Đạt | Viết script xuất thành phần train/validation/test theo khoảng giá và quốc gia, kèm kiểm tra không trùng nhóm tên chai giữa các tập. Dùng báo cáo này để giải thích mẫu nào được dùng cho EDA và mô hình. |
+| Đô | Hoàn thiện hai hình cốt lõi của mình trên tập train về phân bố giá và quan hệ giá–điểm. Rà nhãn, trục/đơn vị và số mẫu của các hình nhóm chọn đưa vào báo cáo; không làm lại hình mà thành viên khác phụ trách. |
+| Dương | Viết mạch EDA nối các phân tích của nhóm: dữ liệu gồm những gì, giá liên hệ với điểm ra sao, metadata gợi ra câu hỏi gì. Tách rõ quan sát và giả thuyết, không suy diễn nhân quả. |
+| Dũng | Mở rộng bảng metadata tuần 6 trên tập train: so sánh `points` giữa các giống nho đủ mẫu trong cùng khoảng giá, rồi làm 1–2 hình. Ghi rõ nhóm nào quá ít mẫu để tránh diễn giải sai. |
 
-| Thành viên | Vai trò chính | Vai trò hỗ trợ |
-|---|---|---|
-| Khánh | Nhóm trưởng, data split, regression baseline, integration | QA, điều phối deadline và reproducibility |
-| Đạt | Data pipeline, validation, model-ready data | Test và kiểm tra leakage |
-| Đô | EDA, visualization, error analysis | Chuẩn hóa hình ảnh báo cáo |
-| Dương | Statistical inference, ethics, bias | Viết phương pháp và limitations |
-| Dũng | Feature engineering, modeling, evaluation | Model serialization và metrics |
+## Tuần 8 — Kiểm định và hoàn thiện câu chuyện dữ liệu
 
-Vai trò chính không có nghĩa một người sở hữu riêng một thư mục. Mỗi đầu ra có một người thực hiện và một reviewer khác người thực hiện.
+| Người phụ trách | Nhiệm vụ |
+|---|---|
+| Khánh | Trên tập train, tự kiểm tra giả thuyết về mối liên hệ giữa giá và `points`: nêu giả thuyết, chọn thước đo phù hợp, tính kết quả, tạo một hình minh họa đơn giản và viết kết luận kèm độ lớn quan hệ. |
+| Đạt | Kiểm định nhận xét sơ bộ từ tuần 6: điểm review của nhóm có giá và nhóm thiếu giá khác nhau đến mức nào. Ghi phép kiểm định, số mẫu, độ lớn chênh lệch, khoảng tin cậy và giới hạn; tự tạo một hình so sánh hai nhóm. Chỉ dùng nhóm có giá thuộc train cho so sánh, không đọc nhãn validation/test để điều chỉnh mô hình. |
+| Đô | Chọn phát hiện kiểm định quan trọng nhất của nhóm và tự tạo một hình giải thích phát hiện đó, ghi rõ số mẫu và khoảng tin cậy khi có. Chọn thêm 1–2 hình do Khánh, Đạt hoặc Dương tự làm để chuẩn hóa cho báo cáo; không phải tạo lại toàn bộ hình kiểm định. |
+| Dương | Trên tập train, chọn trước hai nhóm metadata đủ mẫu để so sánh điểm review. Nêu giả thuyết, phép kiểm định và giả định; tự tạo một hình so sánh và báo cáo độ lớn khác biệt, khoảng tin cậy, điều không thể suy ra từ kết quả. |
+| Dũng | Nhận kết quả kiểm định từ Khánh, Đạt và Dương; lập một bảng chung ghi giả thuyết, số mẫu, phương pháp, độ lớn kết quả và giới hạn. Tạo notebook chạy lại bảng này từ kết quả của từng người và kiểm tra lại ít nhất một phép tính; không phải tự thiết kế cả ba phép kiểm định. |
 
-## 3. Tuần 5 — Khóa bài toán và tạo baseline
+## Tuần 9 — So sánh mô hình hồi quy hai tầng
 
-**Mục tiêu tuần:** chuyển từ dữ liệu sạch sang thiết kế thí nghiệm ML rõ ràng.
+| Người phụ trách | Nhiệm vụ |
+|---|---|
+| Khánh | Trên split đã chốt, tự xây `Dummy` và mô hình chỉ giá; thiết lập cách chọn `alpha` bằng GroupKFold chỉ trên train và cùng một grid để Dũng dùng cho các mô hình Ridge còn lại. Xuất dự đoán cùng MAE/RMSE/R² trên validation; kiểm tra cùng mẫu, cùng metric và preprocessing chỉ học từ train. |
+| Đạt | Viết bước chuẩn bị dữ liệu dùng chung: chọn chai có giá quan sát, xử lý năm thiếu và mã hóa metadata từ train. Viết test kiểm tra split không chồng nhóm chai và không fit preprocessing trên validation/test. |
+| Đô | Từ dự đoán validation, tự tạo hai hình điểm thật–điểm dự đoán và phân bố sai số, cùng bảng sai số theo khoảng giá. Viết nhận xét mô hình sai ở nhóm nào. |
+| Dương | Nhận dự đoán của Khánh và Dũng, kiểm tra bốn cấu hình dùng cùng các chai validation rồi ghép bảng MAE/RMSE/R². Tính chênh lệch MAE giữa chỉ giá và kết hợp trên cùng mẫu; viết ý nghĩa thực tế và giới hạn của điểm review. |
+| Dũng | Dùng split và cách chọn `alpha` do Khánh chốt, cùng bước preprocessing chung của Đạt, để cấu hình và chạy hai mô hình Ridge: chỉ metadata và kết hợp. Xuất dự đoán theo mã dòng và MAE/RMSE/R² trên validation để Dương ghép bảng; chưa mở test cuối và không phải tự xây lại preprocessing. |
 
-| ID | Người làm | Người review | Nhiệm vụ | Đầu ra | Phụ thuộc | Điều kiện hoàn thành |
-|---|---|---|---|---|---|---|
-| W5-K1 | Khánh | Dương | Chốt experimental protocol, trực tiếp tạo split 70/15/15 và chạy Linear Regression baseline | `src/split_data.py` hoặc notebook split có thể tái tạo; bảng metric Linear | Cleaning pipeline | Target là `points`; seed và indices tái tạo được; không overlap; preprocessing chỉ fit train; có MAE/RMSE/\(R^2\) trên validation |
-| W5-Da1 | Đạt | Khánh | Kiểm tra schema, missing, duplicate và xác định cột model-ready | Báo cáo validation và đặc tả feature ban đầu | Cleaning pipeline | Có số dòng/cột, danh sách feature được dùng/loại và lý do |
-| W5-Do1 | Đô | Dũng | EDA `points`, `price`, `log_price`, quốc gia và variety | `notebooks/02_eda.ipynb` và hình nháp | File cleaned | Notebook chạy từ đầu; mỗi biểu đồ có tiêu đề, trục và kết luận |
-| W5-Du1 | Dương | Đạt | Đánh giá missingness còn lại, đặt câu hỏi và giả thuyết thống kê | Phần inference plan trong báo cáo tuần | W5-Da1 | Có ít nhất ba giả thuyết, biến, kiểm định dự kiến và giả định |
-| W5-Dg1 | Dũng | Đô | Xây Dummy và Ridge baseline, sau đó ghép kết quả với Linear baseline của Khánh | Notebook/script baseline và bảng so sánh validation | W5-K1, W5-Da1 | Cùng split và preprocessing; báo cáo MAE/RMSE/\(R^2\); chưa đọc test |
+## Tuần 10 — Đánh giá cuối và hoàn thiện bài nộp
 
-**Deadline:** cuối tuần 5.
-
-**Gate cuối tuần:** toàn nhóm thống nhất feature ban đầu, split protocol và baseline. Nếu gate chưa đạt, không bắt đầu tuning.
-
-## 4. Tuần 6 — Feature engineering, inference và so sánh mô hình
-
-**Mục tiêu tuần:** tạo pipeline preprocessing đúng và thu bằng chứng phân tích.
-
-| ID | Người làm | Người review | Nhiệm vụ | Đầu ra | Phụ thuộc | Điều kiện hoàn thành |
-|---|---|---|---|---|---|---|
-| W6-K1 | Khánh | Đạt | Trực tiếp tích hợp preprocessing và Linear/Ridge bằng `Pipeline`/`ColumnTransformer`; chạy khung CV chung | Module/khung experiment dùng chung và bảng CV Linear/Ridge | W5-K1, W5-Da1 | Không fit preprocessing ngoài train; mọi model dùng cùng folds/seed; lệnh chạy được từ project root |
-| W6-Da1 | Đạt | Dương | Xử lý categorical cardinality, rare categories, missing indicator và đặc trưng giá/vintage | Module feature engineering và data validation | W5-Da1 | Transformation xác định rõ; không dùng target để tạo feature |
-| W6-Do1 | Đô | Khánh | Hoàn thiện tối thiểu năm biểu đồ trả lời câu hỏi nghiên cứu | Hình trong `reports/figures/` và caption | W5-Do1 | Hình đọc được, thống nhất style, có insight và không lặp ý |
-| W6-Du1 | Dương | Đô | Thực hiện tối thiểu ba phân tích/kiểm định thống kê | `notebooks/03_statistical_inference.ipynb` | W5-Du1 | Kiểm tra giả định, effect size/CI khi phù hợp, không chỉ báo p-value |
-| W6-Dg1 | Dũng | Khánh | So sánh Linear/Ridge với các regressor cây phù hợp | Bảng CV và thời gian chạy | W6-K1, W6-Da1 | Có mean/std CV, cùng metric và cùng dữ liệu; chưa dùng test |
-
-**Deadline:** cuối tuần 6.
-
-**Gate cuối tuần:** có pipeline không leakage, năm biểu đồ đạt chuẩn, ba phân tích thống kê và bảng CV công bằng.
-
-### Mốc kiểm tra thứ Tư và thuyết trình thứ Năm
-
-Do có buổi kiểm tra vào thứ Tư và thuyết trình vào thứ Năm tuần sau, nhóm áp dụng lịch rút gọn sau:
-
-- Hoàn thành toàn bộ gate tuần 5 trước cuối tuần này.
-- Hoàn thành phần cốt lõi tuần 6 trước tối thứ Ba: năm biểu đồ, 1–2 kiểm định thống kê, preprocessing pipeline và CV cho các baseline.
-- Khóa số liệu và slide vào tối thứ Ba; thứ Tư chỉ kiểm tra, ghi nhận góp ý và sửa lỗi nhỏ.
-- Không mở test set, không tuning sâu và không làm web trước buổi thuyết trình.
-
-Phần kỹ thuật Khánh phải trực tiếp trình bày trong buổi kiểm tra gồm:
-
-1. Cách tạo split 70/15/15 và kiểm tra không overlap.
-2. Vì sao preprocessing chỉ được fit trên train.
-3. Cách xây Linear Regression baseline.
-4. Kết quả MAE, RMSE và \(R^2\) trên validation.
-5. Cách tích hợp preprocessing và model trong một pipeline tái lập được.
-
-## 5. Tuần 7 — Tuning, error analysis và chọn mô hình
-
-**Mục tiêu tuần:** chọn mô hình bằng validation/CV, đồng thời hiểu mô hình sai ở đâu.
-
-| ID | Người làm | Người review | Nhiệm vụ | Đầu ra | Phụ thuộc | Điều kiện hoàn thành |
-|---|---|---|---|---|---|---|
-| W7-K1 | Khánh | Dũng | Chạy feature-group ablation, chủ trì model review và lập decision record | Bảng ablation và quyết định mô hình | Kết quả tuần 6 | So sánh ít nhất price-only, metadata-only và combined; quyết định dựa trên metric, độ ổn định, khả năng giải thích và chi phí chạy |
-| W7-Da1 | Đạt | Khánh | Audit data leakage, split overlap và reproducibility | Leakage checklist và test bổ sung | W6-K1 | Không có record overlap; cùng seed tái tạo cùng split/kết quả trong tolerance |
-| W7-Do1 | Đô | Dương | Phân tích residual và sai số theo country, variety và price band | `notebooks/04_error_analysis.ipynb` và hình | Prediction validation | Có residual distribution, actual-vs-predicted và group error table |
-| W7-Du1 | Dương | Đạt | Phân tích bias/ethics và soạn model card bản đầu | Model card draft | W7-Do1 | Nêu intended use, excluded use, subgroup risks và limitations |
-| W7-Dg1 | Dũng | Đô | Tuning có giới hạn cho tối đa hai model tốt nhất | Kết quả search và model candidate | W6-Dg1 | Search space được ghi lại; lựa chọn bằng CV/validation; không dùng test |
-
-**Deadline:** cuối tuần 7.
-
-**Gate cuối tuần:** chỉ còn một model chính và một baseline đối chứng; test set vẫn bị khóa.
-
-## 6. Tuần 8 — Tích hợp end-to-end và viết báo cáo
-
-**Mục tiêu tuần:** một thành viên khác có thể chạy lại toàn bộ quy trình mà không cần sửa code thủ công.
-
-| ID | Người làm | Người review | Nhiệm vụ | Đầu ra | Phụ thuộc | Điều kiện hoàn thành |
-|---|---|---|---|---|---|---|
-| W8-K1 | Khánh | Đạt | Ghép entry point end-to-end và hướng dẫn reproducibility | Lệnh train/evaluate nội bộ và runbook | Model tuần 7 | Chạy từ project root; đường dẫn không phụ thuộc máy cá nhân |
-| W8-Da1 | Đạt | Dũng | Viết test cho schema, preprocessing và split | Test suite mở rộng | W7-Da1 | Test bắt lỗi thiếu cột, leakage/overlap và transformation sai cơ bản |
-| W8-Do1 | Đô | Khánh | Chuẩn hóa figures, caption và phần EDA/results | Bộ figures gần cuối | Tuần 6–7 | File có tên nhất quán, đủ độ phân giải, mỗi hình có nguồn dữ liệu |
-| W8-Du1 | Dương | Đô | Viết data, method, inference, ethics và limitations | Báo cáo đạt khoảng 70% | Các phân tích trước | Mỗi claim quan trọng có số liệu, bảng hoặc hình hỗ trợ |
-| W8-Dg1 | Dũng | Dương | Hoàn thiện train/evaluate, lưu pipeline và metadata | Model artifact candidate và metrics validation | Model tuần 7 | Artifact chứa preprocessing + model; có phiên bản, seed và feature list |
-
-**Deadline:** cuối tuần 8.
-
-**Gate cuối tuần:** clone sạch hoặc môi trường mới chạy được pipeline; báo cáo đạt tối thiểu 70%. Chỉ khi gate đạt mới được dành thời gian cho web.
-
-## 7. Tuần 9 — Đánh giá test một lần và model freeze
-
-**Mục tiêu tuần:** tạo kết quả cuối không thiên lệch và khóa artifact.
-
-| ID | Người làm | Người review | Nhiệm vụ | Đầu ra | Phụ thuộc | Điều kiện hoàn thành |
-|---|---|---|---|---|---|---|
-| W9-K1 | Khánh | Dương | Tạo experiment manifest, xác nhận checklist rồi cho phép mở test đúng một lần; đóng gói model freeze | Manifest, biên bản test evaluation và version freeze | Gate tuần 8 | Ghi checksum, commit, config, feature list, thời điểm và người chạy; không tuning sau test |
-| W9-Da1 | Đạt | Đô | Audit dữ liệu, split và checksum cuối | Final data audit | W8-Da1 | Kích thước split, schema và checksum khớp cấu hình đã khóa |
-| W9-Do1 | Đô | Dũng | Tạo biểu đồ test/residual cuối và thay hình nháp | Figures cuối | Test predictions | Không cherry-pick subgroup để làm đẹp kết quả; caption đúng metric |
-| W9-Du1 | Dương | Khánh | Hoàn thiện model card, ethics, bias và limitations | Model card/report hoàn chỉnh | W9-Da1, W9-Do1 | Nêu rõ rủi ro tổng quát hóa và giới hạn dữ liệu |
-| W9-Dg1 | Dũng | Đạt | Chạy evaluation test và xuất MAE/RMSE/\(R^2\), group metrics | Metrics JSON/CSV và bảng kết quả | W9-K1 | Chỉ một lần; artifact/model/config khớp bản đã chọn tuần 7–8 |
-
-**Deadline:** cuối tuần 9.
-
-**Gate cuối tuần:** model, dữ liệu, metrics, báo cáo và hình được khóa; README được cập nhật bằng số liệu thật.
-
-## 8. Tuần 10 — Hoàn thiện bài nộp và bảo vệ
-
-**Mục tiêu tuần:** nộp một sản phẩm nhất quán và mọi thành viên đều giải thích được phần của mình.
-
-| ID | Người làm | Người review | Nhiệm vụ | Đầu ra | Phụ thuộc | Điều kiện hoàn thành |
-|---|---|---|---|---|---|---|
-| W10-K1 | Khánh | Cả nhóm | Code freeze, tích hợp bài nộp, mở và kết thúc hai buổi rehearsal | Release candidate và checklist nộp | Gate tuần 9 | Repo sạch, lệnh chạy đúng, không còn placeholder hoặc kết quả mâu thuẫn |
-| W10-Da1 | Đạt | Dương | Chuẩn bị phần data source, audit, cleaning và validation | Phần trình bày dữ liệu | Final report | Trình bày được quyết định missing/duplicate/outlier và bằng chứng |
-| W10-Do1 | Đô | Khánh | Chuẩn bị phần EDA, figures và error analysis | Phần trình bày phân tích | Figures cuối | Mỗi hình trả lời một câu hỏi; không đọc số liệu rời rạc |
-| W10-Du1 | Dương | Đạt | Chuẩn bị inference, bias, ethics và limitations | Phần trình bày đánh giá trách nhiệm | Model card cuối | Phân biệt correlation/causation và nêu phạm vi sử dụng |
-| W10-Dg1 | Dũng | Đô | Chuẩn bị modeling, metrics và giải thích lựa chọn model | Phần trình bày mô hình | Metrics cuối | Giải thích baseline, CV, MAE/RMSE/\(R^2\) và test protocol |
-
-**Deadline:** trước hạn nộp chính thức; rehearsal thứ hai phải hoàn thành trước buổi bảo vệ ít nhất một ngày.
-
-## 9. Definition of Done chung
-
-Một nhiệm vụ chỉ được chuyển sang `Done` khi:
-
-1. Đầu ra nằm đúng thư mục và không phụ thuộc đường dẫn máy cá nhân.
-2. Code/notebook chạy lại từ đầu không lỗi.
-3. Có kết luận ngắn, không chỉ có code hoặc biểu đồ.
-4. Có reviewer khác người thực hiện xác nhận.
-5. Test liên quan đã chạy thành công.
-6. README hoặc tài liệu liên quan được cập nhật nếu giao diện chạy thay đổi.
-7. Không sử dụng test set ngoài quy trình tuần 9.
-
-## 10. Theo dõi tiến độ
-
-Trong mỗi buổi họp tuần, nhóm cập nhật bảng sau trong issue/project board thay vì tạo thư mục cá nhân:
-
-| Task ID | Owner | Reviewer | Trạng thái | Blocker | Link PR/đầu ra |
-|---|---|---|---|---|---|
-| Ví dụ: W5-Do1 | Đô | Dũng | In progress | Không | Link notebook/PR |
-
-Trạng thái hợp lệ: `Todo`, `In progress`, `In review`, `Done`, `Blocked`. Task `Blocked` phải ghi rõ nguyên nhân và người có thể gỡ blocker.
+| Người phụ trách | Nhiệm vụ |
+|---|---|
+| Khánh | Chốt bốn cấu hình theo validation và kiểm tra lệnh đánh giá trước khi Dũng mở test. Sau khi có metric test, tự tính và giải thích chênh lệch MAE giữa chỉ giá và kết hợp; ghép code, báo cáo và phần trình bày kết quả hai tầng. |
+| Đạt | Chạy lại pipeline từ dữ liệu gốc, đối chiếu số dòng, checksum và split/holdout mới. Viết phần nguồn dữ liệu, cleaning và khả năng tái lập cho báo cáo cuối. |
+| Đô | Sau khi có kết quả test hợp lệ, cập nhật hình so sánh điểm thật–dự đoán và sai số theo nhóm. Hoàn thiện hình, chú thích và phần trực quan hóa trong báo cáo. |
+| Dương | Viết phần tổng hợp EDA, kiểm định, ý nghĩa của chênh lệch sai số, bias, đạo đức khi diễn giải điểm review và giới hạn. Chuẩn bị lời giải thích “đã có điểm thật thì dự đoán để làm gì?”. |
+| Dũng | Sau khi Khánh khóa cấu hình và duyệt lệnh, chạy một đợt đánh giá test cho cả bốn mô hình; xuất bảng MAE/RMSE/R² và dự đoán để nhóm phân tích. Lưu model, cấu hình và lệnh chạy lại cho bài nộp. |

@@ -13,6 +13,7 @@ EXPECTED_RAW_SHA256 = (
 )
 REQUIRED_DERIVED_COLUMNS = {
     "price_original",
+    "price_was_missing",
     "price_was_corrected",
     "log_price",
     "vintage_year",
@@ -50,9 +51,18 @@ def validate_cleaned_dataset(
         errors.append(f"Thiếu cột dẫn xuất: {sorted(missing_derived)}")
 
     if not missing_columns:
-        missing_base = int(cleaned[base_columns].isna().sum().sum())
-        if missing_base:
-            errors.append(f"Còn {missing_base} ô thiếu trong các cột gốc.")
+        missing_other = int(cleaned[[c for c in base_columns if c != "price"]].isna().sum().sum())
+        if missing_other:
+            errors.append(f"Còn {missing_other} ô thiếu ngoài cột price.")
+
+    if {"price", "price_original", "price_was_missing", "log_price"}.issubset(cleaned.columns):
+        price_missing = cleaned["price"].isna()
+        if not price_missing.equals(cleaned["price_was_missing"].astype(bool)):
+            errors.append("Cờ price_was_missing không khớp price.")
+        if not price_missing.equals(cleaned["price_original"].isna()):
+            errors.append("price_original không bảo toàn trạng thái thiếu ban đầu.")
+        if not price_missing.equals(cleaned["log_price"].isna()):
+            errors.append("log_price không bảo toàn trạng thái thiếu của price.")
 
     exact_duplicates = int(cleaned[base_columns].duplicated().sum()) if not missing_columns else -1
     if exact_duplicates > 0:
@@ -90,6 +100,8 @@ def validate_cleaned_dataset(
         "columns": len(cleaned.columns),
         "exact_duplicates": exact_duplicates,
         "corrected_prices": corrected_prices,
+        "missing_prices_preserved": int(cleaned["price"].isna().sum()),
+        "model_eligible_rows": int(cleaned["price"].notna().sum()),
         "max_points": int(cleaned["points"].max()),
         "max_price": int(cleaned["price"].max()),
     }

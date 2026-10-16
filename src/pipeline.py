@@ -82,6 +82,10 @@ def run_cleaning_stage() -> pd.DataFrame:
     df.to_csv(CLEANED_DATA_PATH, index=False)
 
     print(f"Hoàn tất cleaning: {df.shape}")
+    print(
+        "Mẫu đủ điều kiện cho so sánh hai tầng (có giá quan sát): "
+        f"{validation['model_eligible_rows']:,} dòng"
+    )
     print(f"Đầu ra: {CLEANED_DATA_PATH}")
     print("Báo cáo:")
     _print_report(overall_report)

@@ -27,8 +27,6 @@ wine-quality-prediction/
 ├── notebooks/
 │   ├── 00_data_understanding.ipynb
 │   └── 01_outliers_and_noise.ipynb
-├── reports/
-│   └── figures/
 ├── src/
 ├── tests/
 ├── frontend/                         # Legacy
@@ -37,7 +35,7 @@ wine-quality-prediction/
 └── README.md
 ```
 
-Phần cleaning có cấu trúc tương đối rõ. Phần EDA, inference và modeling chưa có đầy đủ module, artifact và test.
+Cleaning đã được điều chỉnh để giữ giá thiếu. Phần EDA, inference và modeling phục vụ so sánh Dummy / chỉ giá / chỉ metadata / kết hợp **chưa được triển khai**; không dùng prototype classifier cũ.
 
 ## 3. Cấu trúc mục tiêu đến cuối kỳ
 
@@ -48,13 +46,14 @@ wine-quality-prediction/
 │   ├── interim/                      # Bước cleaning trung gian
 │   └── processed/
 │       ├── wine_cleaned_final.csv
-│       └── model_ready.*             # Chỉ tạo nếu cần lưu artifact này
+│       ├── split_assignments.csv
+│       └── split_manifest.json
 ├── docs/
 │   ├── ROADMAP_W5_W10.md
 │   ├── TEAM_WORKFLOW.md
 │   ├── PROJECT_STRUCTURE.md
 │   ├── data_dictionary.md
-│   └── model_card.md                 # Tạo trong tuần 7–9
+│   └── model_card.md                 # Tạo sau khi có kết quả mô hình
 ├── notebooks/
 │   ├── 00_data_understanding.ipynb
 │   ├── 01_outliers_and_noise.ipynb
@@ -70,8 +69,8 @@ wine-quality-prediction/
 │   ├── pipeline.py                   # Cleaning entry point hiện tại
 │   ├── features.py                   # Feature/preprocessing dùng chung
 │   ├── split_data.py                 # Split reproducible
-│   ├── train.py                      # Train/CV entry point
-│   └── evaluate.py                   # Evaluation có kiểm soát
+│   ├── train.py                      # Validation sơ bộ / train-only CV và freeze
+│   └── evaluate.py                   # Một đợt test cho bốn cấu hình đã khóa
 ├── tests/
 │   ├── test_cleaning.py
 │   ├── test_features.py
@@ -116,15 +115,15 @@ src/pipeline.py
              split train/val/test
                      │
                      ▼
-          preprocessing + feature pipeline
+          train-fitted preprocessing + feature pipeline
                      │
               ┌──────┴──────┐
               ▼             ▼
-       CV/validation     EDA/inference
+       CV/validation     EDA/inference trên train
               │             │
               └──────┬──────┘
                      ▼
-              locked final model
+              four locked comparison arms
                      │
               ┌──────┴────────┐
               ▼               ▼
@@ -149,7 +148,7 @@ Mỗi kết quả model cần ghi:
 - Ưu tiên để preprocessing nằm trong scikit-learn pipeline thay vì xuất nhiều CSV đã encode.
 - Nếu cần lưu `model_ready`, phải có script tái tạo và schema đi kèm.
 - Không lưu một bản model-ready riêng cho mỗi thành viên.
-- Split indices hoặc ID ổn định phải được lưu/tái tạo bằng seed và quy tắc đã khóa.
+- Split assignments được lưu với row ID và title-group; kiểm tra hash của cleaned data trước khi train/evaluate.
 - Không fit encoder/imputer/scaler trước khi chia dữ liệu.
 
 ## 7. Xử lý thành phần legacy
@@ -166,12 +165,9 @@ Trong giai đoạn tuần 5–8:
 - Không xóa nếu chưa có quyết định chung vì chúng vẫn thể hiện prototype trước đây.
 - Gắn nhãn legacy rõ trong README và tài liệu.
 
-Sau khi model freeze, nhóm chọn một trong hai hướng:
+Hướng hai tầng không yêu cầu web. Nếu nhóm quyết định làm web thành task riêng về sau, phải thay toàn bộ input schema và prediction flow bằng pipeline Wine Reviews 130k đã khóa.
 
-1. Không làm web: giữ legacy ngoài phạm vi và nộp sản phẩm data/model/report.
-2. Làm web: thay toàn bộ input schema và prediction flow bằng pipeline Wine Reviews 130k đã khóa.
-
-## 8. Web gate
+## 8. Web gate (ngoài phạm vi bắt buộc)
 
 Chỉ bắt đầu web/API khi đồng thời đạt các điều kiện:
 
@@ -180,14 +176,14 @@ Chỉ bắt đầu web/API khi đồng thời đạt các điều kiện:
 - Có model artifact chứa preprocessing và model.
 - Báo cáo hoàn thành tối thiểu khoảng 70%.
 - Có validation metrics và error analysis.
-- Không làm chậm deadline model freeze tuần 9.
+- Không làm chậm các nhiệm vụ phân tích và mô hình trong roadmap.
 
-Nếu thiếu một điều kiện, ưu tiên tiếp tục phần data/model/report.
+Nếu thiếu một điều kiện, ưu tiên tiếp tục phần data/model/report; không đưa web vào gate báo cáo tuần 6.
 
 ## 9. Cách xác định ownership mà không dùng thư mục cá nhân
 
-- Task ID và owner nằm trong [ROADMAP_W5_W10.md](ROADMAP_W5_W10.md).
-- Tên branch chứa task ID.
+- Người phụ trách và nhiệm vụ nằm trong [ROADMAP_W5_W10.md](ROADMAP_W5_W10.md); task ID, nếu dùng, được tạo trong issue/branch.
+- Tên branch chứa task ID khi nhóm dùng issue để theo dõi.
 - Pull request ghi owner, reviewer và đầu ra.
 - Báo cáo có mục contributors nếu cần ghi đóng góp học thuật.
 - Git history dùng để xem thay đổi cụ thể, không dùng vị trí thư mục để suy ra đóng góp.

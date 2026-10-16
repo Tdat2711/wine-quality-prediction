@@ -10,8 +10,8 @@
 
 ## 2. Quy trình một nhiệm vụ
 
-1. Chọn task ID trong [Roadmap tuần 5–10](ROADMAP_W5_W10.md).
-2. Ghi rõ owner, reviewer, đầu ra, deadline và dependency.
+1. Chọn nhiệm vụ và người phụ trách trong [Roadmap tuần 5–10](ROADMAP_W5_W10.md).
+2. Nếu cần theo dõi bằng issue/branch, đặt task ID tại đó; ghi rõ reviewer, đầu ra, deadline và dependency. Roadmap không chứa task ID hay reviewer.
 3. Tạo branch từ `dev` đã được cập nhật.
 4. Chỉ thay đổi các file thuộc phạm vi task.
 5. Tự chạy notebook/test liên quan và ghi bằng chứng trong pull request.
@@ -36,9 +36,9 @@ fix/<task-id>-mo-ta-ngan
 Ví dụ:
 
 ```text
-analysis/w5-do1-eda-points-price
-model/w6-dg1-compare-regressors
-docs/w8-du1-report-method
+analysis/w7-do1-eda-points-price
+model/w9-dg1-compare-regressors
+docs/w8-du1-inference
 ```
 
 ### Commit
@@ -53,13 +53,13 @@ docs/w8-du1-report-method
 
 Mỗi pull request phải ghi:
 
-- Task ID và mục tiêu.
+- Nhiệm vụ trong roadmap, mục tiêu và task ID nếu nhóm dùng issue/branch.
 - File/đầu ra chính đã thay đổi.
 - Cách chạy lại.
 - Test/check đã chạy và kết quả.
 - Ảnh hoặc bảng trước/sau nếu thay đổi visualization/model result.
 - Hạn chế hoặc vấn đề còn lại.
-- Xác nhận không đọc/chạm test set nếu chưa đến tuần 9.
+- Xác nhận không dùng test set của thí nghiệm chính trước khi khóa mô hình và đến bước đánh giá cuối.
 
 Reviewer kiểm tra:
 
@@ -74,7 +74,7 @@ Reviewer kiểm tra:
 
 - `data/raw/` là bất biến; không chỉnh sửa, ghi đè hoặc lưu file phát sinh vào đây.
 - File trung gian có thể tái tạo đặt trong `data/interim/`.
-- File dùng trực tiếp cho phân tích/model đặt trong `data/processed/`.
+- File dùng trực tiếp cho phân tích/model đặt trong `data/processed/`; giữ `price` thiếu trong cleaned data và chỉ lọc dòng có giá quan sát ở thí nghiệm chính.
 - Mọi bước thay đổi dữ liệu phải được thực hiện bằng code, không sửa CSV thủ công.
 - Cần lưu row count, schema và quyết định loại/giữ dữ liệu sau bước xử lý quan trọng.
 - Không tự động xóa logical duplicate nếu chưa đủ bằng chứng.
@@ -104,10 +104,12 @@ Reviewer kiểm tra:
 
 - Target chính là `points`; không dùng `quality`.
 - Chia train/validation/test trước khi fit bước học từ dữ liệu.
-- Split chuẩn: 70/15/15, seed cố định, cân nhắc phân tầng theo bins của `points`.
+- Split xấp xỉ 70/15/15, seed cố định được chốt trước khi chạy, nhóm theo `title` chuẩn hóa; ưu tiên không để cùng tên chai ở hai tập hơn là ép tỷ lệ dòng chính xác tuyệt đối.
+- Bốn cấu hình Dummy / chỉ giá / chỉ metadata / kết hợp phải dùng cùng tập dòng và split. Metadata chính: `country`, `province`, `variety`, `vintage_year`; giá dùng `log1p(price)`.
 - Imputer, scaler, encoder, rare-category mapping và feature selection chỉ fit trên train.
 - Cross-validation và validation dùng để chọn feature/model/hyperparameter.
-- Test set bị khóa đến tuần 9 và chỉ được đánh giá một lần sau khi Khánh xác nhận checklist.
+- Buổi đánh giá tiến trình thứ Tư tuần 6 trình bày dữ liệu, cleaning và phân tích mô tả; không yêu cầu metric hồi quy. Nếu chưa có kết quả, ghi rõ “chưa có”, không dùng số giả.
+- Thí nghiệm hồi quy bắt đầu ở tuần 9 của lịch học thực tế. Test set mới chỉ được đánh giá ở tuần 10 sau khi giao thức và mô hình đã khóa, với sự xác nhận của Khánh; không dùng lại holdout seed 42 từng chạy thử.
 - Không tuning sau khi xem test. Nếu phát hiện lỗi kỹ thuật làm kết quả test vô hiệu, phải ghi biên bản, sửa lỗi và công bố rõ lần chạy lại.
 - Mọi model phải được so với `DummyRegressor`.
 - Metric chính là MAE; RMSE và \(R^2\) là metric phụ.
@@ -143,7 +145,7 @@ Reviewer kiểm tra:
 - `src/train_model.py`, `frontend/` và `services/prediction-service/` hiện là legacy prototype.
 - Không lấy kết quả từ các file legacy đưa vào báo cáo chính.
 - Không sửa web/API trong giai đoạn data/model trừ khi có task được cả nhóm chấp thuận.
-- Chỉ mở task web khi gate tuần 8 đạt: pipeline end-to-end chạy được, test pass, báo cáo đạt khoảng 70% và model artifact đã được tạo.
+- Web không phải đầu ra bắt buộc của hướng hai tầng; chỉ mở task web riêng nếu phần data, thí nghiệm và báo cáo đã hoàn thành.
 - Nếu làm web, API phải dùng đúng pipeline Wine Reviews 130k và input schema phải được định nghĩa từ model cuối.
 
 ## 10. Khi có xung đột hoặc trễ hạn
