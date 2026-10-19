@@ -87,6 +87,8 @@ Reviewer kiểm tra:
 
 - Đặt tên theo thứ tự chạy: `02_eda.ipynb`, `03_statistical_inference.ipynb`, `04_error_analysis.ipynb`.
 - Mỗi notebook có phần mục tiêu, dữ liệu đầu vào, phương pháp, kết quả và kết luận.
+- Riêng buổi đánh giá tiến trình thứ Tư tuần 6: mỗi người nộp một notebook phần việc trong `notebooks/w5_progress_parts/`, giữ lại trong repo. Khánh là người duy nhất tích hợp các cell cần thiết vào `notebooks/02_eda.ipynb`; chỉ notebook chung này được dùng để trình bày, không làm slide cho buổi này.
+- Các notebook phần việc đều đọc cùng cleaned data, không chạy lại cleaning riêng hoặc chỉ dán ảnh kết quả. Chỉ chuyển code, bảng/hình và nhận xét đã kiểm tra vào notebook chung; không sao chép năm lần bước nạp dữ liệu.
 - Đọc dữ liệu bằng đường dẫn tương đối tính từ project root.
 - Dùng seed cố định khi có phép lấy mẫu hoặc thuật toán ngẫu nhiên.
 - Trước khi review: restart kernel và run all.
@@ -108,8 +110,8 @@ Reviewer kiểm tra:
 - Bốn cấu hình Dummy / chỉ giá / chỉ metadata / kết hợp phải dùng cùng tập dòng và split. Metadata chính: `country`, `province`, `variety`, `vintage_year`; giá dùng `log1p(price)`.
 - Imputer, scaler, encoder, rare-category mapping và feature selection chỉ fit trên train.
 - Cross-validation và validation dùng để chọn feature/model/hyperparameter.
-- Buổi đánh giá tiến trình thứ Tư tuần 6 trình bày dữ liệu, cleaning và phân tích mô tả; không yêu cầu metric hồi quy. Nếu chưa có kết quả, ghi rõ “chưa có”, không dùng số giả.
-- Thí nghiệm hồi quy bắt đầu ở tuần 9 của lịch học thực tế. Test set mới chỉ được đánh giá ở tuần 10 sau khi giao thức và mô hình đã khóa, với sự xác nhận của Khánh; không dùng lại holdout seed 42 từng chạy thử.
+- Buổi đánh giá tiến trình thứ Tư tuần 6 trình bày câu hỏi hai tầng và EDA giá–điểm bằng một notebook; cleaning chỉ tóm tắt vì đã báo cáo trước. Nếu split chưa được xác nhận, biểu đồ trên mẫu có giá chỉ là khám phá sơ bộ, không công bố metric kiểm định/hồi quy. Nếu split đã được xác nhận, có thể trình bày Spearman trên train và `DummyRegressor`/`LinearRegression` chỉ giá trên train/validation như kết quả thử; không yêu cầu metric để được báo cáo và không dùng số giả.
+- So sánh hồi quy **chính thức** bốn cấu hình ở tuần 9 của lịch học thực tế; kết quả thử trước đó không thay thế bước này. Test set mới chỉ được đánh giá ở tuần 10 sau khi giao thức và mô hình đã khóa, với sự xác nhận của Khánh; không dùng lại holdout seed 42 từng chạy thử.
 - Không tuning sau khi xem test. Nếu phát hiện lỗi kỹ thuật làm kết quả test vô hiệu, phải ghi biên bản, sửa lỗi và công bố rõ lần chạy lại.
 - Mọi model phải được so với `DummyRegressor`.
 - Metric chính là MAE; RMSE và \(R^2\) là metric phụ.

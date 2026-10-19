@@ -43,7 +43,7 @@ Bốn cấu hình dùng **cùng một mẫu và split**: `Dummy`, `price_only`, 
 | Automated tests | Đã có bước đầu | Hiện tập trung vào một số quy tắc cleaning quan trọng |
 | EDA và inference | Chưa hoàn thành | Sẽ triển khai theo câu hỏi hai tầng trong roadmap |
 | Modeling chính thức | Chưa bắt đầu | Chưa có split, pipeline so sánh hoặc metric chính thức |
-| Báo cáo và slide | Chưa hoàn thành | Sẽ thực hiện theo các mốc trong roadmap |
+| Báo cáo tiến trình | Đang chuẩn bị | Buổi thứ Tư tuần 6 dùng một notebook chung, chưa có kết quả mô hình chính thức |
 
 Đầu ra cleaning là `data/processed/wine_cleaned_final.csv`, gồm **119.988 dòng và 19 cột**. Có **8.395 dòng thiếu giá** sau loại duplicate; **111.593 dòng** có giá quan sát được, dự kiến đủ điều kiện cho thí nghiệm chính. Dữ liệu raw có 8.996 giá thiếu. Nhóm chưa chạy so sánh mô hình, validation hoặc test chính thức.
 
@@ -159,7 +159,7 @@ python -m unittest discover -s tests
 jupyter notebook
 ```
 
-Hiện có notebook tìm hiểu dữ liệu và cleaning. Các notebook EDA, inference và phân tích sai số sẽ được tạo theo roadmap; `src/train_model.py` cũ không dùng cho kết quả cuối.
+Hiện có notebook tìm hiểu dữ liệu và cleaning, cùng khung `notebooks/02_eda.ipynb` cho buổi đánh giá tiến trình. Mỗi thành viên sẽ nộp notebook phần việc trong `notebooks/w5_progress_parts/`; Khánh chọn và tích hợp các cell đã kiểm tra vào một notebook chung để trình bày. Các notebook inference và phân tích sai số được làm ở giai đoạn sau; `src/train_model.py` cũ không dùng cho kết quả cuối.
 
 ## 8. Quy ước modeling đã chốt
 
@@ -194,11 +194,11 @@ Nhóm chưa công bố MAE, RMSE hoặc \(R^2\) cho hướng hai tầng. Mọi b
 
 | Thành viên | Trách nhiệm chính |
 |---|---|
-| **Khánh** — nhóm trưởng | Điều phối câu hỏi nghiên cứu, phân tích giá–điểm, tạo split, xây baseline hồi quy và tích hợp kết quả |
-| **Đạt** | Cleaning, kiểm soát dữ liệu và split, chuẩn bị dữ liệu cùng preprocessing dùng chung cho mô hình |
+| **Khánh** — nhóm trưởng | Điều phối câu hỏi nghiên cứu, phân tích giá–điểm, chốt và duyệt split, xây baseline hồi quy chính thức, tích hợp kết quả |
+| **Đạt** | Cleaning, chuẩn bị mẫu và triển khai/kiểm soát split, chuẩn bị dữ liệu cùng preprocessing dùng chung cho mô hình |
 | **Đô** | EDA, trực quan hóa và phân tích sai số mô hình |
 | **Dương** | Kể câu chuyện dữ liệu, thống kê và kiểm định, diễn giải kết quả, bias, ethics và giới hạn |
-| **Dũng** | Khảo sát metadata, xây mô hình chỉ metadata và mô hình kết hợp, đánh giá mô hình cuối |
+| **Dũng** | Khảo sát metadata, thử baseline chỉ giá ở giai đoạn tiến trình nếu đủ điều kiện, xây mô hình chỉ metadata và mô hình kết hợp, đánh giá mô hình cuối |
 
 Nhiệm vụ cụ thể và người phụ trách từng giai đoạn được ghi tại [Roadmap tuần 5–10](docs/ROADMAP_W5_W10.md). Cách chọn reviewer, giao đầu ra và review code nằm trong [Team Workflow](docs/TEAM_WORKFLOW.md).
 
@@ -234,4 +234,4 @@ Nhiệm vụ cụ thể và người phụ trách từng giai đoạn được g
 
 ## 14. Tiến độ
 
-Tuần 5–10 trong [roadmap](docs/ROADMAP_W5_W10.md) là tiến độ thực tế của nhóm, không trùng số tuần in trên slide của học phần 15 tuần. Buổi đánh giá tiến trình vào thứ Tư tuần 6 tập trung vào câu hỏi dự án, dữ liệu, cleaning và thống kê/biểu đồ khám phá đã kiểm tra; sau buổi đó nhóm tiếp tục phân tích mô tả và tạo split mới. Nhóm dùng kiến thức đã xem trước để làm EDA ở tuần 7, kiểm định ở tuần 8, hồi quy ở tuần 9 và hoàn thiện kết quả ở tuần 10.
+Tuần 5–10 trong [roadmap](docs/ROADMAP_W5_W10.md) là tiến độ thực tế của nhóm, không trùng số tuần in trên slide của học phần 15 tuần. Buổi đánh giá tiến trình thứ Tư tuần 6 dùng một notebook chung, tập trung vào câu hỏi dự án và phân tích khám phá giá–điểm; cleaning chỉ được tóm tắt vì đã báo cáo trước. Split có thể bắt đầu trước buổi đánh giá và hoàn tất ở tuần 6. Kiểm định/hồi quy thử chỉ trình bày nếu đã kiểm tra đúng trên train/validation; kiểm định chính thức ở tuần 8, so sánh bốn mô hình ở tuần 9 và đánh giá test cuối ở tuần 10.

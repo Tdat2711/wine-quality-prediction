@@ -2,7 +2,7 @@
 
 ## 1. Nguyên tắc
 
-Repository được tổ chức theo chức năng và luồng dữ liệu, không theo tên thành viên. Cách này giúp:
+Repository được tổ chức theo chức năng và luồng dữ liệu, không tách pipeline thành thư mục cá nhân. Riêng notebook phần việc trước buổi đánh giá tiến trình được giữ chung trong một thư mục để ghi nhận đóng góp; notebook báo cáo vẫn là một file tích hợp. Cách này giúp:
 
 - Người khác tìm đúng loại artifact mà không cần biết ai tạo.
 - Code, dữ liệu và báo cáo có thể tích hợp liên tục.
@@ -26,7 +26,10 @@ wine-quality-prediction/
 ├── docs/
 ├── notebooks/
 │   ├── 00_data_understanding.ipynb
-│   └── 01_outliers_and_noise.ipynb
+│   ├── 01_outliers_and_noise.ipynb
+│   ├── 02_eda.ipynb                 # Khung báo cáo tiến trình, chưa có kết quả phân tích của nhóm
+│   └── w5_progress_parts/
+│       └── README.md                # Quy tắc nộp notebook cá nhân; chưa có năm file phần việc
 ├── src/
 ├── tests/
 ├── frontend/                         # Legacy
@@ -35,7 +38,7 @@ wine-quality-prediction/
 └── README.md
 ```
 
-Cleaning đã được điều chỉnh để giữ giá thiếu. Phần EDA, inference và modeling phục vụ so sánh Dummy / chỉ giá / chỉ metadata / kết hợp **chưa được triển khai**; không dùng prototype classifier cũ.
+Cleaning đã được điều chỉnh để giữ giá thiếu. `02_eda.ipynb` hiện chỉ là khung; các notebook cá nhân sẽ được thêm khi từng người thực hiện nhiệm vụ. Phần EDA, inference và modeling phục vụ so sánh Dummy / chỉ giá / chỉ metadata / kết hợp **chưa có kết quả chính thức**; không dùng prototype classifier cũ.
 
 ## 3. Cấu trúc mục tiêu đến cuối kỳ
 
@@ -57,7 +60,13 @@ wine-quality-prediction/
 ├── notebooks/
 │   ├── 00_data_understanding.ipynb
 │   ├── 01_outliers_and_noise.ipynb
-│   ├── 02_eda.ipynb
+│   ├── 02_eda.ipynb                 # Một notebook dùng để trình bày thứ Tư tuần 6
+│   ├── w5_progress_parts/           # Notebook cá nhân, giữ lại để chạy lại và xem đóng góp
+│   │   ├── 01_khanh_price_tiers.ipynb
+│   │   ├── 02_dat_data_split.ipynb
+│   │   ├── 03_do_eda_plots.ipynb
+│   │   ├── 04_duong_story_stats.ipynb
+│   │   └── 05_dung_baseline.ipynb
 │   ├── 03_statistical_inference.ipynb
 │   └── 04_error_analysis.ipynb
 ├── reports/
@@ -81,7 +90,7 @@ wine-quality-prediction/
 └── README.md
 ```
 
-Các file chưa tồn tại trong cây mục tiêu là định hướng triển khai, không phải tính năng hiện có. Chỉ tạo file khi task tương ứng bắt đầu và có owner/reviewer.
+Các file chưa tồn tại trong cây mục tiêu là định hướng triển khai, không phải tính năng hiện có. Chỉ tạo notebook cá nhân khi người phụ trách bắt đầu task; không tạo năm file rỗng. `02_eda.ipynb` là nơi Khánh tích hợp các cell đã kiểm tra, không sao chép năm lần phần nạp dữ liệu.
 
 ## 4. Trách nhiệm từng thư mục
 
@@ -180,12 +189,13 @@ Chỉ bắt đầu web/API khi đồng thời đạt các điều kiện:
 
 Nếu thiếu một điều kiện, ưu tiên tiếp tục phần data/model/report; không đưa web vào gate báo cáo tuần 6.
 
-## 9. Cách xác định ownership mà không dùng thư mục cá nhân
+## 9. Cách xác định ownership
 
 - Người phụ trách và nhiệm vụ nằm trong [ROADMAP_W5_W10.md](ROADMAP_W5_W10.md); task ID, nếu dùng, được tạo trong issue/branch.
 - Tên branch chứa task ID khi nhóm dùng issue để theo dõi.
 - Pull request ghi owner, reviewer và đầu ra.
 - Báo cáo có mục contributors nếu cần ghi đóng góp học thuật.
 - Git history dùng để xem thay đổi cụ thể, không dùng vị trí thư mục để suy ra đóng góp.
+- `notebooks/w5_progress_parts/` chỉ là nơi nộp năm notebook phần việc; tên file và Git history cho biết người phụ trách, nhưng không tạo năm bản pipeline dữ liệu riêng.
 
 Cách tổ chức này vẫn ghi nhận rõ công sức từng người nhưng tránh phân mảnh pipeline.

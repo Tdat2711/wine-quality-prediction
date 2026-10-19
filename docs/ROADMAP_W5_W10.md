@@ -1,30 +1,36 @@
 # Roadmap dự án — Tuần 5 đến tuần 10
 
+Buổi thứ Tư tuần 6 là **đánh giá tiến trình**, không phải bảo vệ mô hình cuối. Nhóm trình bày bằng **một notebook chung** `notebooks/02_eda.ipynb`, không làm slide cho buổi này. Mỗi người tự tạo và nộp một notebook phần việc trong `notebooks/w5_progress_parts/`; các file này được giữ để chạy lại và ghi nhận đóng góp. Khánh tạo khung notebook chung từ sớm, tích hợp dần các cell cần trình bày và kiểm tra bản cuối; không làm thay phần phân tích của thành viên khác. Không để nhiều người cùng sửa trực tiếp notebook chung.
+
+Mỗi notebook cá nhân cần nêu mục tiêu, đọc cùng `data/processed/wine_cleaned_final.csv`, chứa code tạo lại bảng/hình, kết quả, 2–3 nhận xét và giới hạn. Không làm sạch dữ liệu lần nữa hoặc chỉ nộp ảnh chụp kết quả. Nếu split chưa được xác nhận, phân tích trên mẫu có giá chỉ là **khám phá sơ bộ**; không chạy kiểm định/hồi quy để công bố metric. Không dùng test set trước bước đánh giá cuối.
+
 ## Tuần 5 đến trước buổi đánh giá tiến trình thứ Tư tuần 6
 
 | Người phụ trách | Nhiệm vụ |
 |---|---|
-| Khánh | Chốt câu hỏi hai tầng. Tự viết code chia các chai có giá thành bốn khoảng theo tứ phân vị; xuất bảng số chai, giá trung vị và `points` trung vị, viết 2–3 nhận xét có số liệu. Tự làm slide và trình bày phần giá–điểm; nhận slide đã làm của từng người để ghép và kiểm tra mạch chung. |
-| Đạt | Cleaning pipeline và cleaning log đã có, không làm lại. Từ dữ liệu sạch, lập bảng quy tắc chọn mẫu: số chai có/thiếu giá và số chai có nhãn `points`. Tạo bảng trước/sau cleaning với số dòng, duplicate và hai giá sửa để tự trình bày quyết định xử lý dữ liệu. |
-| Đô | Viết code tạo hai hình: phân bố `price` và quan hệ giá–điểm. Đưa hai hình lên slide; mỗi hình ghi số mẫu, trục/đơn vị và một kết luận mà mình tự trình bày. |
-| Dương | Viết phần giới thiệu theo bối cảnh → vấn đề → câu hỏi → hướng giải quyết. Tự tính bảng trung bình, trung vị, tứ phân vị của `points` và `price`, tạo một hình phân bố `points`; dùng chúng để trình bày mục tiêu, ý nghĩa thực tế và giới hạn của điểm review. |
-| Dũng | Lập bảng ý nghĩa, tỷ lệ thiếu và số nhóm của `price`, `country`, `province`, `variety`, `vintage_year`. Làm một slide giải thích bốn cấu hình dự kiến và tự trình bày; ghi rõ chưa có metric mô hình. |
+| Khánh | Chốt câu hỏi hai tầng. Trong `01_khanh_price_tiers.ipynb`, chia các chai có giá thành bốn khoảng theo tứ phân vị; xuất bảng số chai, giá trung vị và `points` trung vị, viết 2–3 nhận xét có số liệu. Tạo khung `02_eda.ipynb`, nhận các notebook cá nhân, tích hợp phần cần trình bày và kiểm tra mạch chung; không làm thay phân tích của người khác. Chốt quy tắc split để Đạt thực hiện. |
+| Đạt | Cleaning pipeline và cleaning log đã có, không làm lại. Trong `02_dat_data_split.ipynb`, tóm tắt số chai có/thiếu giá và số chai có nhãn `points` bằng một bảng ngắn; bắt đầu split mẫu có giá theo nhóm `title` chuẩn hóa, ghi số dòng từng tập và kiểm tra không chồng nhóm. Nếu chưa xác nhận kịp, hoàn tất ở tuần 6; không trình bày lại báo cáo cleaning chi tiết. |
+| Đô | Trong `03_do_eda_plots.ipynb`, tạo đúng hai hình: phân bố `price` và quan hệ giá–điểm. Mỗi hình có số mẫu, trục/đơn vị và nhận xét để tự trình bày; không làm hình hồi quy hoặc hình của người khác. |
+| Dương | Trong `04_duong_story_stats.ipynb`, viết bối cảnh → vấn đề → câu hỏi và giả thuyết về liên hệ giá–điểm; giải thích điểm review không phải chất lượng khách quan. Chỉ khi split đã được xác nhận, có thể kiểm tra Spearman sơ bộ trên train, báo số mẫu, hệ số, p-value và giới hạn diễn giải. |
+| Dũng | Trong `05_dung_baseline.ipynb`, giải thích ý nghĩa bốn cấu hình dự kiến. Chỉ khi split đã được xác nhận, có thể fit `DummyRegressor` và `LinearRegression` chỉ dùng `log_price` trên train, so MAE validation trên cùng mẫu; ghi rõ đây là kết quả thử, không phải mô hình cuối. Chuyển khảo sát metadata chi tiết sang tuần 6. |
+
+Năm notebook cá nhân đặt trong `notebooks/w5_progress_parts/`. **Đầu ra bắt buộc trước thứ Tư** là notebook chung có câu hỏi, bảng chọn mẫu, bảng bốn khoảng giá, hai biểu đồ và nhận xét đã kiểm tra. Kiểm định/hồi quy thử chỉ đưa vào nếu split và phép tính đã được kiểm tra trước khi chốt notebook tối thứ Ba; nếu chưa có, ghi rõ “chưa có kết quả”, không ước lượng số liệu. Chỉ `02_eda.ipynb` được mở để trình bày.
 
 ## Tuần 6 — Tiếp tục sau buổi đánh giá tiến trình
 
 | Người phụ trách | Nhiệm vụ |
 |---|---|
-| Khánh | Ghi góp ý của giảng viên và sửa câu hỏi nghiên cứu nếu cần. Trên các chai có giá quan sát, tạo split/holdout mới theo nhóm tên chai, không dùng lại holdout seed 42 từng chạy thử; công bố số dòng từng tập. Trên train, lập bảng `points` trung vị theo khoảng giá trong 2–3 quốc gia đủ mẫu. |
-| Đạt | Dựa trên bảng chọn mẫu tuần 5, tự so sánh `points` trung vị và tỷ lệ các quốc gia phổ biến giữa nhóm có giá với nhóm thiếu giá. Viết nhận xét sơ bộ về khả năng mẫu chỉ có giá không đại diện cho toàn bộ dữ liệu. |
-| Đô | Chuyển hai hình giá–điểm đã làm thành code chạy lại; sau khi có split mới, dùng tập train để thêm một hình so sánh trong các nhóm đủ mẫu và sửa hình theo góp ý. |
-| Dương | Từ thống kê mô tả và góp ý, viết một trang câu chuyện dữ liệu: điều đã quan sát, câu hỏi còn mở và giới hạn; tách rõ phát hiện sơ bộ với giả thuyết sẽ kiểm định sau. |
-| Dũng | Trên tập train sau split, tự lập bảng cho các quốc gia và giống nho phổ biến: số chai, giá trung vị, `points` trung vị. Ghi nhóm nào quá ít mẫu và đề xuất metadata đáng phân tích sâu ở tuần 7. |
+| Khánh | Ghi góp ý của giảng viên và sửa câu hỏi nghiên cứu nếu cần. Duyệt và khóa split do Đạt tạo; không dùng lại holdout seed 42 từng chạy thử. Trên train, lập bảng `points` trung vị theo khoảng giá trong 2–3 quốc gia đủ mẫu; không làm lại bảng bốn khoảng giá chung đã nộp. |
+| Đạt | Hoàn tất split theo nhóm `title` nếu chưa xong, lưu quy tắc/seed và số dòng từng tập; kiểm tra không chồng nhóm. Tự so sánh `points` trung vị và tỷ lệ các quốc gia phổ biến giữa nhóm có giá và nhóm thiếu giá; nhận xét khả năng mẫu có giá không đại diện toàn bộ dữ liệu. |
+| Đô | Sửa hai hình cốt lõi theo góp ý và chạy lại trên train sau khi split đã khóa; thêm một hình so sánh trong nhóm đủ mẫu, không vẽ lại hình của thành viên khác. |
+| Dương | Từ thống kê mô tả và góp ý, viết một trang câu chuyện dữ liệu: điều đã quan sát, câu hỏi còn mở và giới hạn. Hoàn tất/kiểm tra kết quả Spearman sơ bộ nếu tuần trước chưa có; tách rõ phát hiện sơ bộ với kiểm định chính thức tuần 8. |
+| Dũng | Trên train sau split, lập bảng cho các quốc gia và giống nho phổ biến: số chai, giá trung vị, `points` trung vị; ghi nhóm quá ít mẫu. Hoàn tất/kiểm tra thử nghiệm chỉ giá nếu tuần trước chưa có; không coi kết quả thử là so sánh bốn cấu hình tuần 9. |
 
 ## Tuần 7 — Trực quan hóa và phân tích khám phá
 
 | Người phụ trách | Nhiệm vụ |
 |---|---|
-| Khánh | Từ bảng thăm dò tuần 6, viết phần EDA riêng: trên tập train, tính số mẫu và điểm trung vị theo bốn khoảng giá cho các quốc gia đủ mẫu; đối chiếu xu hướng chung với từng quốc gia và giải thích điểm giống/khác. |
+| Khánh | Từ bảng thăm dò tuần 6, mở rộng phần EDA trên train cho các quốc gia đủ mẫu; đối chiếu xu hướng giá–điểm chung với từng quốc gia và giải thích điểm giống/khác, không tạo lại bảng chung tuần 5. |
 | Đạt | Viết script xuất thành phần train/validation/test theo khoảng giá và quốc gia, kèm kiểm tra không trùng nhóm tên chai giữa các tập. Dùng báo cáo này để giải thích mẫu nào được dùng cho EDA và mô hình. |
 | Đô | Hoàn thiện hai hình cốt lõi của mình trên tập train về phân bố giá và quan hệ giá–điểm. Rà nhãn, trục/đơn vị và số mẫu của các hình nhóm chọn đưa vào báo cáo; không làm lại hình mà thành viên khác phụ trách. |
 | Dương | Viết mạch EDA nối các phân tích của nhóm: dữ liệu gồm những gì, giá liên hệ với điểm ra sao, metadata gợi ra câu hỏi gì. Tách rõ quan sát và giả thuyết, không suy diễn nhân quả. |
@@ -44,7 +50,7 @@
 
 | Người phụ trách | Nhiệm vụ |
 |---|---|
-| Khánh | Trên split đã chốt, tự xây `Dummy` và mô hình chỉ giá; thiết lập cách chọn `alpha` bằng GroupKFold chỉ trên train và cùng một grid để Dũng dùng cho các mô hình Ridge còn lại. Xuất dự đoán cùng MAE/RMSE/R² trên validation; kiểm tra cùng mẫu, cùng metric và preprocessing chỉ học từ train. |
+| Khánh | Trên split đã chốt, xây lại `Dummy` và mô hình chỉ giá **chính thức** bằng giao thức chung; thiết lập cách chọn `alpha` bằng GroupKFold chỉ trên train và cùng một grid để Dũng dùng cho các mô hình Ridge còn lại. Xuất dự đoán cùng MAE/RMSE/R² trên validation; không dùng kết quả `LinearRegression` thử tuần 5–6 làm kết quả cuối. |
 | Đạt | Viết bước chuẩn bị dữ liệu dùng chung: chọn chai có giá quan sát, xử lý năm thiếu và mã hóa metadata từ train. Viết test kiểm tra split không chồng nhóm chai và không fit preprocessing trên validation/test. |
 | Đô | Từ dự đoán validation, tự tạo hai hình điểm thật–điểm dự đoán và phân bố sai số, cùng bảng sai số theo khoảng giá. Viết nhận xét mô hình sai ở nhóm nào. |
 | Dương | Nhận dự đoán của Khánh và Dũng, kiểm tra bốn cấu hình dùng cùng các chai validation rồi ghép bảng MAE/RMSE/R². Tính chênh lệch MAE giữa chỉ giá và kết hợp trên cùng mẫu; viết ý nghĩa thực tế và giới hạn của điểm review. |
