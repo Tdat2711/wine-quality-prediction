@@ -1,7 +1,7 @@
 """
-EDA Figures Generator – Wine Quality Project
+EDA Plots Generator – Wine Quality Project
 =============================================
-Tạo hai biểu đồ EDA phục vụ báo cáo / slide:
+Tạo hai biểu đồ EDA phục vụ báo cáo:
   1. Phân bố giá (Price Distribution) – Histogram + KDE + Median/Mean
   2. Quan hệ Giá–Điểm (Price vs Points) – Scatter + Hồi quy log
 
@@ -27,7 +27,7 @@ if sys.stdout.encoding.lower() != "utf-8":
 # ── Paths ──────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_PATH = os.path.join(BASE_DIR, "data", "processed", "wine_cleaned_final.csv")
-OUTPUT_DIR = os.path.join(BASE_DIR, "outputs", "eda_figures")
+OUTPUT_DIR = os.path.join(BASE_DIR, "outputs", "eda_plots")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 FIG1_PATH = os.path.join(OUTPUT_DIR, "fig1_price_distribution.png")
@@ -145,23 +145,6 @@ scatter = ax2.scatter(
     alpha=0.35, s=14, edgecolors="none"
 )
 
-# Đường xu hướng hồi quy phi tuyến dạng log(price)
-log_price = np.log1p(df["price"].values)
-points_vals = df["points"].values
-coeffs = np.polyfit(log_price, points_vals, 1)
-poly_fn = np.poly1d(coeffs)
-x_line = np.linspace(df["price"].min(), 300, 200)
-y_line = poly_fn(np.log1p(x_line))
-
-ax2.plot(
-    x_line, y_line, color="#D32F2F", linewidth=2.5,
-    label=f"Xu hướng: Points ≈ {coeffs[0]:.2f} × ln(Price + 1) + {coeffs[1]:.1f}"
-)
-
-# Hệ số tương quan
-corr_raw = df[["price", "points"]].corr().iloc[0, 1]
-corr_log = pd.Series(log_price).corr(pd.Series(points_vals))
-
 # Trục & Nhãn
 ax2.set_xlabel("Giá (Đơn vị: USD)", fontsize=13, fontweight="bold")
 ax2.set_ylabel("Điểm đánh giá (Đơn vị: Points, thang điểm 80–100)", fontsize=13, fontweight="bold")
@@ -176,11 +159,13 @@ cbar.set_label("Thang điểm (Points)", fontsize=10.5)
 # Khung thông tin: Số mẫu + Trục/Đơn vị + Kết luận
 conclusion_2 = (
     f"• Số mẫu: N = {n_with_price:,} (hiển thị sample 15,000 điểm tránh chồng lấn)\n"
-    f"• Trục: Trục X = Giá (USD) | Trục Y = Điểm (80-100)\n"
-    f"• Hệ số tương quan: r(Price, Points) = {corr_raw:.3f} | r(ln_Price, Points) = {corr_log:.3f}\n"
-    f"• Kết luận: Rượu giá cao thường có xu hướng điểm cao hơn, nhưng độ phân tán rất lớn.\n"
-    f"  Giá đơn thuần chưa giải thích được trọn vẹn điểm số (r ≈ 0.43).\n"
-    f"  → Khẳng định tính cần thiết phải bổ sung metadata (quốc gia, giống nho, vùng...) cho mô hình."
+    f"• Trục: Trục X = Giá (USD) | Trục Y = Điểm review (Points 80-100)\n"
+    f"• Nhận xét khám phá sơ bộ:\n"
+    f"  - Tồn tại xu hướng đồng biến: Rượu giá cao hầu như không có điểm thấp (< 85).\n"
+    f"  - Độ phân tán ở phân khúc phổ thông ($10 – $50) là rất lớn: cùng một mức giá\n"
+    f"    có thể đạt điểm từ 80 đến trên 95.\n"
+    f"  - Kết luận: Giá mang thông tin nhưng CHƯA ĐỦ để giải thích điểm review.\n"
+    f"    Cần thêm metadata (quốc gia, giống nho, vùng trồng) ở các bước tiếp theo."
 )
 ax2.text(
     0.98, 0.05, conclusion_2,
@@ -191,7 +176,6 @@ ax2.text(
     bbox=dict(boxstyle="round,pad=0.6", facecolor="#FFFFF0", edgecolor="#BDBDBD", alpha=0.92)
 )
 
-ax2.legend(loc="upper left", fontsize=10.5)
 fig2.tight_layout()
 fig2.savefig(FIG2_PATH, dpi=300, bbox_inches="tight")
 plt.close(fig2)

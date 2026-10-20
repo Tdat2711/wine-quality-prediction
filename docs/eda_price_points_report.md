@@ -20,10 +20,10 @@ Theo định hướng nghiên cứu mới của dự án **Wine Quality Predicti
 
 ## 2. Chi Tiết Thực Hiện & Phương Pháp Trực Quan Hóa
 
-Mã nguồn thực thi được đặt tại file [`src/create_eda_figures.py`](../src/create_eda_figures.py), chỉ tập trung tạo 2 hình ảnh độc lập độ nét cao (300 DPI) lưu tại thư mục [`outputs/eda_figures/`](../outputs/eda_figures/):
+Mã nguồn thực thi được đặt tại file [`src/create_eda_plots.py`](../src/create_eda_plots.py), chỉ tập trung tạo 2 hình ảnh độc lập độ nét cao (300 DPI) lưu tại thư mục [`outputs/eda_plots/`](../outputs/eda_plots/):
 
 ### 2.1. Hình 1: Phân bố `price` (`fig1_price_distribution.png`)
-- **Vị trí file**: `outputs/eda_figures/fig1_price_distribution.png`
+- **Vị trí file**: `outputs/eda_plots/fig1_price_distribution.png`
 - **Phương pháp trực quan**:
   - Biểu đồ phân bố tần suất (**Histogram**) với 100 bins trong khoảng giá 0–300 USD.
   - Đường ước lượng mật độ hạt nhân (**KDE - Kernel Density Estimation**) để nhìn rõ dáng phân bố liên tục.
@@ -45,40 +45,40 @@ Mã nguồn thực thi được đặt tại file [`src/create_eda_figures.py`](
 ---
 
 ### 2.2. Hình 2: Quan hệ Giá – Điểm (`fig2_price_vs_points.png`)
-- **Vị trí file**: `outputs/eda_figures/fig2_price_vs_points.png`
+- **Vị trí file**: `outputs/eda_plots/fig2_price_vs_points.png`
 - **Phương pháp trực quan**:
   - Biểu đồ phân tán (**Scatter plot**) thể hiện phân bố đồng thời giữa `price` và `points`. Để tránh hiện tượng chen chúc/chồng lấn điểm (overplotting), biểu đồ lấy mẫu ngẫu nhiên $15,000$ điểm đại diện với độ trong suốt $\alpha = 0.35$ và dải màu theo thang điểm.
-  - Đường hồi quy phi tuyến dạng logarit phù hợp với bản chất dữ liệu: $\text{Points} \approx a \cdot \ln(\text{Price}) + b$.
+  - Không vẽ đường hồi quy/kiểm định mô hình để giữ đúng tính chất phân tích khám phá mô tả ban đầu (EDA).
 - **Thông số kỹ thuật & Đơn vị**:
-  - Số lượng mẫu: $N = 111,593$ mẫu (toàn bộ dữ liệu được dùng để tính tương quan và fit đường hồi quy).
+  - Số lượng mẫu: $N = 111,593$ mẫu.
   - Trục hoành ($X$): Giá rượu (Đơn vị: USD, từ 0 đến 300 USD).
   - Trục tung ($Y$): Điểm đánh giá chất lượng của chuyên gia (Đơn vị: Points, dải điểm chuẩn của Wine Enthusiast từ 80 đến 100 điểm).
-- **Thống kê tương quan**:
-  - Hệ số tương quan Pearson tuyến tính: $r(\text{price}, \text{points}) = 0.433$.
-  - Hệ số tương quan dạng logarit: $r(\ln(\text{price}), \text{points}) = 0.617$.
-  - Phương trình xu hướng xấp xỉ: $\text{Points} \approx 3.01 \times \ln(\text{Price} + 1) + 78.3$.
 - **Kết luận rút ra**:
-  > 1. Có xu hướng đồng biến: Rượu giá cao hơn thường nhận được điểm đánh giá cao hơn từ các chuyên gia, và mối quan hệ này thể hiện rõ ràng nhất dưới hàm logarit (giá tăng theo cấp số nhân thì điểm tăng theo cấp số cộng).
-  > 2. Tuy nhiên, **độ phân tán là rất lớn**: Ở cùng một mức giá (ví dụ $20–$50 USD), điểm số dao động từ 80 đến tận 95+ điểm. Tương quan tuyến tính chỉ đạt mức trung bình ($r \approx 0.43$).
-  > 3. **Ý nghĩa cốt lõi cho đề tài**: *Giá tiền một mình nó KHÔNG ĐỦ để dự đoán chính xác điểm review của một chai rượu*. Kết quả này đặt nền móng lý giải vì sao nhóm nghiên cứu cần bước tiếp theo: xây dựng mô hình có sự tham gia của **metadata** (quốc gia, giống nho, vùng trồng nho, niên vụ) để kiểm chứng liệu thông tin sản phẩm có giúp giải thích phần phương sai còn lại hay không.
+  > 1. Có xu hướng đồng biến: Rượu giá cao hầu như không có điểm thấp (< 85).
+  > 2. Tuy nhiên, **độ phân tán là rất lớn**: Ở cùng một mức giá (ví dụ $20–$50 USD), điểm số dao động từ 80 đến tận 95+ điểm.
+  > 3. **Ý nghĩa cốt lõi cho đề tài**: *Giá tiền một mình nó CHƯA ĐỦ để giải thích điểm review của một chai rượu*. Kết quả này đặt nền móng lý giải vì sao nhóm nghiên cứu cần bước tiếp theo: đưa thêm **metadata** (quốc gia, giống nho, vùng trồng nho, niên vụ) để kiểm chứng liệu thông tin sản phẩm có giúp giải thích phần chênh lệch điểm số này hay không.
 
 ---
 
 ## 3. Cấu Trúc Các Tệp Tin Liên Quan Đã Được Cập Nhật
 
-Sau khi dọn dẹp các mã nguồn và tệp tạm về slide theo yêu cầu, cấu trúc lưu trữ hiện tại như sau:
+Cấu trúc lưu trữ hiện tại như sau:
 
 ```text
 wine-quality-prediction/
 ├── docs/
 │   ├── eda_price_points_report.md          <-- [File này] Báo cáo chi tiết phương pháp & kết luận
 │   └── ...
+├── notebooks/
+│   ├── 03_do_eda_plots.ipynb               <-- Notebook EDA chính của thành viên Đô
+│   └── w5_progress_parts/
+│       └── 03_do_eda_plots.ipynb           <-- Bản sao trong thư mục phần việc tuần 5
 ├── outputs/
-│   └── eda_figures/                        <-- Thư mục chứa 2 ảnh xuất ra (300 DPI)
+│   └── eda_plots/                          <-- Thư mục chứa 2 ảnh xuất ra (300 DPI)
 │       ├── fig1_price_distribution.png
 │       └── fig2_price_vs_points.png
 └── src/
-    └── create_eda_figures.py             <-- Script Python tạo 2 hình
+    └── create_eda_plots.py                 <-- Script Python tạo 2 hình
 ```
 
 ---
@@ -89,6 +89,6 @@ Nếu có cập nhật dữ liệu sạch mới trong tương lai và muốn v�
 
 ```bash
 # Đứng tại thư mục wine-quality-prediction:
-python src/create_eda_figures.py
+python src/create_eda_plots.py
 ```
-Hai hình ảnh sẽ tự động được làm mới tại `outputs/eda_figures/`.
+Hai hình ảnh sẽ tự động được làm mới tại `outputs/eda_plots/`.
