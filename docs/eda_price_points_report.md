@@ -1,94 +1,88 @@
-# Báo Cáo EDA: Phân Tích Phân Bố Giá & Mối Quan Hệ Giá – Điểm
+# EDA sơ bộ: Phân bố giá và quan hệ giá–điểm review
 
-Tài liệu này ghi lại chi tiết quá trình đọc dữ liệu định hướng từ các tài liệu/hình ảnh dự án, phương pháp luận thực hiện, mã nguồn trực quan hóa và các kết luận thống kê rút ra từ 2 biểu đồ EDA chính: **Phân bố `price`** và **Quan hệ `price` – `points`**.
+## Phạm vi và nguồn
 
----
+Hai hình do Đô thực hiện, được hoàn thiện cách trình bày và tích hợp vào notebook
+tiến trình của Khánh. Đây là thống kê mô tả trên toàn mẫu có giá, không phải EDA riêng trên train;
+chưa phải kết quả kiểm định hoặc đánh giá mô hình.
 
-## 1. Bối Cảnh Và Định Hướng Đề Tài (Từ Tài Liệu & Ảnh Yêu Cầu)
+- Đầu vào: data/processed/wine_cleaned_final.csv; không chạy lại cleaning ở bước này.
+- Toàn bộ dữ liệu sạch: **119.988 bản ghi review**.
+- Có giá quan sát: **111.593 bản ghi**; thiếu giá: **8.395 bản ghi**.
+- Một dòng là một bản ghi review; cùng tên rượu có thể có nhiều review.
+- Không điền giá thiếu và không xóa giá cao để vẽ hình.
 
-Theo định hướng nghiên cứu mới của dự án **Wine Quality Prediction** (từ tập dữ liệu Wine Reviews 130k):
-- **Mục tiêu cốt lõi**: Khảo sát xem *giá (`price`) giải thích điểm review (`points`) được đến đâu*, và *các trường thông tin sản phẩm (metadata: quốc gia, giống nho, niên vụ, vùng sản xuất...) có bổ sung giá trị dự đoán vượt ngoài giá hay không*.
-- **Cách tiếp cận câu chuyện (Storytelling qua biểu đồ)**:
-  1. Biểu đồ phân bố giá: Hiểu đặc tính dữ liệu giá, mức độ lệch và định hướng tiền xử lý (vd: log transform).
-  2. Biểu đồ giá – điểm: Đánh giá mối quan hệ thực tế giữa giá và điểm. Liệu giá cao có chắc chắn điểm cao? Giá đơn thuần có đủ để làm tính năng dự đoán duy nhất không?
-- **Nguyên tắc xử lý dữ liệu sạch**:
-  - Dữ liệu sau pipeline làm sạch có tổng cộng **119,988** dòng.
-  - Trong đó có **8,395** dòng bị thiếu giá (`price_was_missing == True`). Theo quy tắc mới, không tự ý điền giá trung vị/trung bình cho các mẫu thiếu giá để tránh làm sai lệch quan hệ tự nhiên.
-  - Phân tích EDA cho các quan hệ liên quan đến giá được thực hiện trên tập mẫu quan sát thực tế: **$N = 111,593$** mẫu.
+Bản notebook cá nhân duy nhất:
+[03_do_eda_plots.ipynb](../notebooks/w5_progress_parts/03_do_eda_plots.ipynb).
+Bản trình bày:
+[02_eda.ipynb](../notebooks/02_eda.ipynb).
+Hai notebook dùng chung hàm vẽ trong
+[src/create_eda_plots.py](../src/create_eda_plots.py).
 
----
+## Hình 1 — Phân bố giá
 
-## 2. Chi Tiết Thực Hiện & Phương Pháp Trực Quan Hóa
+[Ảnh xuất PNG](../outputs/eda_plots/fig1_price_distribution.png).
 
-Mã nguồn thực thi được đặt tại file [`src/create_eda_plots.py`](../src/create_eda_plots.py), chỉ tập trung tạo 2 hình ảnh độc lập độ nét cao (300 DPI) lưu tại thư mục [`outputs/eda_plots/`](../outputs/eda_plots/):
+- Histogram 100 bins trong khung 0–300 USD; trục trái là số bản ghi review.
+- KDE được tính trên toàn mẫu có giá, với trục mật độ riêng bên phải.
+- Các vạch dọc đánh dấu giá trung vị và trung bình của toàn mẫu.
+- Giá nhỏ nhất 4 USD, trung vị 25 USD, trung bình khoảng 35,6 USD, tối đa 2.500 USD.
+- Có **310 bản ghi giá trên 300 USD**, khoảng **0,28%** mẫu có giá; chúng vẫn được giữ.
+- Chú thích nằm dưới hình, không che các cột hoặc điểm.
 
-### 2.1. Hình 1: Phân bố `price` (`fig1_price_distribution.png`)
-- **Vị trí file**: `outputs/eda_plots/fig1_price_distribution.png`
-- **Phương pháp trực quan**:
-  - Biểu đồ phân bố tần suất (**Histogram**) với 100 bins trong khoảng giá 0–300 USD.
-  - Đường ước lượng mật độ hạt nhân (**KDE - Kernel Density Estimation**) để nhìn rõ dáng phân bố liên tục.
-  - Vạch mốc giá trị **Trung vị (Median)** và **Trung bình (Mean)**.
-- **Thông số kỹ thuật & Đơn vị**:
-  - Số lượng mẫu phân tích: $N = 111,593$ mẫu (loại trừ $8,395$ mẫu thiếu giá).
-  - Trục hoành ($X$): Giá rượu (Đơn vị: USD, giới hạn hiển thị 0 – 300 USD để trực quan hóa rõ vùng mật độ cao).
-  - Trục tung ($Y$): Số lượng mẫu rượu quan sát (Đơn vị: Chai).
-- **Thống kê cơ bản**:
-  - Giá trị nhỏ nhất: $4 USD.
-  - Giá trị lớn nhất: $2,500 USD.
-  - Trung vị (Median): **$25 USD**.
-  - Trung bình (Mean): **$35.6 USD**.
-- **Kết luận rút ra**:
-  > Phân bố giá của bộ dữ liệu bị **lệch phải rất mạnh (right-skewed)**. Phần lớn rượu vang tập trung ở phân khúc phổ thông ($\le 25\text{ USD}$), trong khi một lượng nhỏ rượu cao cấp có giá từ vài trăm đến hàng ngàn USD kéo giá trị trung bình lên $35.6\text{ USD}$.
-  > 
-  > **Khuyến nghị kỹ thuật**: Không nên đưa biến `price` trực tiếp ở thang đo tuyến tính vào các thuật toán hồi quy vì các giá trị ngoại lai lớn sẽ gây méo trọng số. Cần áp dụng phép biến đổi logarit: $\text{log}(1 + \text{price})$ hoặc phân khúc giá thành các bin hạng mục.
+Phân bố giá lệch phải. Nhóm dự kiến dùng log1p(price) cho cấu hình chỉ giá theo
+giao thức dự án. Đây là lựa chọn biểu diễn đặc trưng, không phải yêu cầu bắt buộc
+cho mọi thuật toán chỉ vì biến giá có phân bố lệch.
 
----
+## Hình 2 — Quan hệ giá và điểm review
 
-### 2.2. Hình 2: Quan hệ Giá – Điểm (`fig2_price_vs_points.png`)
-- **Vị trí file**: `outputs/eda_plots/fig2_price_vs_points.png`
-- **Phương pháp trực quan**:
-  - Biểu đồ phân tán (**Scatter plot**) thể hiện phân bố đồng thời giữa `price` và `points`. Để tránh hiện tượng chen chúc/chồng lấn điểm (overplotting), biểu đồ lấy mẫu ngẫu nhiên $15,000$ điểm đại diện với độ trong suốt $\alpha = 0.35$ và dải màu theo thang điểm.
-  - Không vẽ đường hồi quy/kiểm định mô hình để giữ đúng tính chất phân tích khám phá mô tả ban đầu (EDA).
-- **Thông số kỹ thuật & Đơn vị**:
-  - Số lượng mẫu: $N = 111,593$ mẫu.
-  - Trục hoành ($X$): Giá rượu (Đơn vị: USD, từ 0 đến 300 USD).
-  - Trục tung ($Y$): Điểm đánh giá chất lượng của chuyên gia (Đơn vị: Points, dải điểm chuẩn của Wine Enthusiast từ 80 đến 100 điểm).
-- **Kết luận rút ra**:
-  > 1. Có xu hướng đồng biến: Rượu giá cao hầu như không có điểm thấp (< 85).
-  > 2. Tuy nhiên, **độ phân tán là rất lớn**: Ở cùng một mức giá (ví dụ $20–$50 USD), điểm số dao động từ 80 đến tận 95+ điểm.
-  > 3. **Ý nghĩa cốt lõi cho đề tài**: *Giá tiền một mình nó CHƯA ĐỦ để giải thích điểm review của một chai rượu*. Kết quả này đặt nền móng lý giải vì sao nhóm nghiên cứu cần bước tiếp theo: đưa thêm **metadata** (quốc gia, giống nho, vùng trồng nho, niên vụ) để kiểm chứng liệu thông tin sản phẩm có giúp giải thích phần chênh lệch điểm số này hay không.
+[Ảnh xuất PNG](../outputs/eda_plots/fig2_price_vs_points.png).
 
----
+- Toàn mẫu: 111.593 bản ghi có giá.
+- Lấy mẫu tối đa 15.000 bản ghi với seed 42 để giảm chồng lấp; seed này chỉ dùng vẽ hình.
+- Trục X là giá USD, khung 0–300; trục Y là điểm review, thang 80–100.
+- Màu thể hiện điểm review. Chú thích phân biệt toàn mẫu, số được lấy mẫu và số điểm
+  thực sự nằm trong khung; số trong khung được tính lại mỗi lần chạy.
+- Không fit đường hồi quy, chạy kiểm định hoặc đọc các file split.
 
-## 3. Cấu Trúc Các Tệp Tin Liên Quan Đã Được Cập Nhật
+Giá và điểm có xu hướng đồng biến trong biểu đồ, nhưng cùng mức giá vẫn có nhiều
+mức điểm khác nhau. Toàn mẫu còn **16 bản ghi giá trên 100 USD nhưng điểm dưới 85**;
+không diễn giải xu hướng thành quy luật tuyệt đối.
 
-Cấu trúc lưu trữ hiện tại như sau:
+**Câu hỏi tiếp theo:** metadata như quốc gia, giống nho, vùng và niên vụ có giúp
+giảm sai số dự đoán ngoài thông tin giá hay không? Hai hình hiện tại chưa chứng minh
+giá trị dự đoán bổ sung này. Cần so sánh mô hình trên cùng mẫu và validation sau khi
+split đã chốt.
 
-```text
-wine-quality-prediction/
-├── docs/
-│   ├── eda_price_points_report.md          <-- [File này] Báo cáo chi tiết phương pháp & kết luận
-│   └── ...
-├── notebooks/
-│   ├── 03_do_eda_plots.ipynb               <-- Notebook EDA chính của thành viên Đô
-│   └── w5_progress_parts/
-│       └── 03_do_eda_plots.ipynb           <-- Bản sao trong thư mục phần việc tuần 5
-├── outputs/
-│   └── eda_plots/                          <-- Thư mục chứa 2 ảnh xuất ra (300 DPI)
-│       ├── fig1_price_distribution.png
-│       └── fig2_price_vs_points.png
-└── src/
-    └── create_eda_plots.py                 <-- Script Python tạo 2 hình
-```
+## Giới hạn
 
----
+Mẫu có giá có thể khác nhóm thiếu giá; dữ liệu review không đại diện toàn bộ thị trường.
+Điểm review phụ thuộc người chấm, không phải thước đo chất lượng khách quan.
+Các quốc gia, vùng và giống nho có thể liên quan đồng thời tới cả giá và điểm.
+Quan hệ quan sát không chứng minh giá cao gây ra điểm cao.
+Split seed 42 đã chốt ngày 21/10/2026; bước tiếp theo chạy lại EDA trên train theo roadmap.
 
-## 4. Hướng Dẫn Chạy Lại Script
+## Chạy lại
 
-Nếu có cập nhật dữ liệu sạch mới trong tương lai và muốn vẽ lại 2 biểu đồ, chạy lệnh:
+Chọn kernel môi trường dự án, Restart Kernel và Run All rồi lưu notebook.
+Cài môi trường theo README trước khi chạy. Notebook hỗ trợ project root,
+thư mục notebooks và thư mục notebooks/w5_progress_parts.
 
-```bash
-# Đứng tại thư mục wine-quality-prediction:
+Lệnh xuất hai PNG hiện có từ project root được giữ nguyên:
+
+~~~powershell
 python src/create_eda_plots.py
-```
-Hai hình ảnh sẽ tự động được làm mới tại `outputs/eda_plots/`.
+~~~
+
+Ảnh được tạo lại tại outputs/eda_plots/ với tên fig1_price_distribution.png và
+fig2_price_vs_points.png (300 DPI). Có thể chỉ định --input hoặc --output-dir;
+khi import module vào notebook, module không tự đọc CSV, ghi ảnh hoặc đổi backend.
+
+Các notebook riêng của Khánh và Dũng được giữ nguyên để ghi nhận đóng góp.
+Bối cảnh, giả thuyết và câu chuyện dữ liệu của
+[Dương](../notebooks/w5_progress_parts/04_duong_story_stats.ipynb) đã được hiệu chỉnh
+theo dữ liệu sạch và tích hợp vào notebook chung. Notebook riêng tính lại mẫu và
+thống kê giá từ code; tên nguồn Wine Reviews 130k không được dùng làm cỡ mẫu sạch.
+Phần chọn mẫu/split của Đạt đã hoàn thành, seed 42 được chốt ngày 21/10/2026.
+Spearman của Dương trên train và thử mô hình dành cho buổi sau. Chưa công bố MAE, RMSE, R² hoặc kết quả
+kiểm định trong bản EDA sơ bộ này.

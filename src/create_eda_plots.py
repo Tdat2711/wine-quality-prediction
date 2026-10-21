@@ -1,184 +1,177 @@
-"""
-EDA Plots Generator – Wine Quality Project
-=============================================
-Tạo hai biểu đồ EDA phục vụ báo cáo:
-  1. Phân bố giá (Price Distribution) – Histogram + KDE + Median/Mean
-  2. Quan hệ Giá–Điểm (Price vs Points) – Scatter + Hồi quy log
+"""Shared descriptive price plots for progress notebooks and PNG export.
 
-Mỗi hình được hiển thị rõ ràng:
-  - Số lượng mẫu (Sample size N)
-  - Trục tọa độ và đơn vị rõ ràng (Price in USD, Points 80–100)
-  - Khung kết luận (Insights) trực quan ngay trên biểu đồ
+Importing this module does not read data, write figures, or change the backend.
+Run python src/create_eda_plots.py to refresh the existing two PNG exports.
 """
 
-import os
-import sys
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.ticker import FuncFormatter
 import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use("Agg")  # Non-interactive backend
-import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Thiết lập encoding cho stdout
-if sys.stdout.encoding.lower() != "utf-8":
-    sys.stdout.reconfigure(encoding="utf-8")
 
-# ── Paths ──────────────────────────────────────────────────────────────
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_PATH = os.path.join(BASE_DIR, "data", "processed", "wine_cleaned_final.csv")
-OUTPUT_DIR = os.path.join(BASE_DIR, "outputs", "eda_plots")
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_PATH = PROJECT_ROOT / "data" / "processed" / "wine_cleaned_final.csv"
+OUTPUT_DIR = PROJECT_ROOT / "outputs" / "eda_plots"
 
-FIG1_PATH = os.path.join(OUTPUT_DIR, "fig1_price_distribution.png")
-FIG2_PATH = os.path.join(OUTPUT_DIR, "fig2_price_vs_points.png")
 
-# ── Load data ──────────────────────────────────────────────────────────
-print("Loading data …")
-df_all = pd.read_csv(DATA_PATH)
+def _number(value: float, decimals: int = 0) -> str:
+    return f"{value:,.{decimals}f}".translate(str.maketrans({",": ".", ".": ","}))
 
-# Theo quy trình làm sạch dữ liệu: giữ dòng có giá quan sát được để phân tích
-if "price_was_missing" in df_all.columns:
-    df = df_all[df_all["price_was_missing"] == False].copy()
-else:
-    df = df_all.dropna(subset=["price"]).copy()
 
-n_total = len(df_all)
-n_with_price = len(df)
-n_missing_price = n_total - n_with_price
+def _price_sample(df_price: pd.DataFrame) -> pd.DataFrame:
+    """Validate an observed-price sample without silently dropping rows."""
+    missing = {"price", "points"} - set(df_price.columns)
+    if missing:
+        raise ValueError(f"Thiếu cột bắt buộc: {sorted(missing)}")
+    if df_price.empty:
+        raise ValueError("Không có bản ghi có giá để vẽ.")
+    values = df_price[["price", "points"]].copy()
+    for column in values.columns:
+        values[column] = pd.to_numeric(values[column], errors="raise")
+        if values[column].isna().any() or not np.isfinite(values[column]).all():
+            raise ValueError(f"Cột {column} chứa giá trị thiếu hoặc không hữu hạn.")
+    if not values["price"].gt(0).all():
+        raise ValueError("Giá quan sát phải dương.")
+    if not values["points"].between(80, 100).all():
+        raise ValueError("Điểm review phải nằm trong khoảng 80–100.")
+    return values
 
-print(f"  Tổng số mẫu sau cleaning: {n_total:,}")
-print(f"  Số mẫu có giá quan sát  : {n_with_price:,}")
-print(f"  Số mẫu thiếu giá        : {n_missing_price:,}")
 
-# ── Thiết lập phong cách đồ họa ─────────────────────────────────────────
-sns.set_theme(style="whitegrid", font_scale=1.1)
-WINE_RED = "#722F37"
-WINE_GOLD = "#C5A02E"
+def plot_price_distribution(
+    df_price: pd.DataFrame, *, display_max: float = 300.0
+) -> Figure:
+    """Plot counts and KDE on labelled axes, keeping the full input sample."""
+    values = _price_sample(df_price)
+    if not np.isfinite(display_max) or display_max <= 0:
+        raise ValueError("Giới hạn hiển thị giá phải dương và hữu hạn.")
+    prices = values["price"]
+    outside = int(prices.gt(display_max).sum())
 
-# ══════════════════════════════════════════════════════════════════════
-# HÌNH 1 – Phân bố giá (Price Distribution)
-# ══════════════════════════════════════════════════════════════════════
-print("Đang tạo Hình 1: Phân bố giá ...")
-fig1, ax1 = plt.subplots(figsize=(10, 6))
+    with sns.axes_style("whitegrid"), sns.plotting_context("notebook"):
+        fig, ax = plt.subplots(figsize=(11, 6.2))
+        ax.hist(
+            prices, bins=100, range=(0, display_max), color="#722F37",
+            alpha=0.8, edgecolor="white", linewidth=0.4, label="Tần suất",
+        )
+        ax.axvline(
+            prices.median(), color="#1E88E5", linestyle="--", linewidth=2,
+            label=f"Trung vị = {_number(prices.median())} USD",
+        )
+        ax.axvline(
+            prices.mean(), color="#EF8A17", linestyle="--", linewidth=2,
+            label=f"Trung bình = {_number(prices.mean(), 1)} USD",
+        )
+        handles, labels = ax.get_legend_handles_labels()
+        if prices.nunique() > 1:
+            density_ax = ax.twinx()
+            sns.kdeplot(
+                x=prices, ax=density_ax, color="#A48419", linewidth=2,
+                clip=(0, display_max), cut=0, label="Mật độ KDE",
+            )
+            density_ax.set_ylabel("Mật độ ước lượng (KDE)")
+            density_ax.grid(False)
+            kde_handles, kde_labels = density_ax.get_legend_handles_labels()
+            handles += kde_handles
+            labels += kde_labels
+        ax.legend(handles, labels, loc="upper right", framealpha=0.95)
+        ax.set(
+            xlim=(0, display_max), xlabel="Giá (USD)",
+            ylabel="Số bản ghi review",
+            title="Hình 1. Phân bố giá trên mẫu có giá quan sát",
+        )
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: _number(value)))
+        fig.subplots_adjust(left=0.09, right=0.88, top=0.89, bottom=0.22)
+        fig.text(
+            0.09, 0.055,
+            f"N = {_number(len(values))} bản ghi có giá; trung vị = {_number(prices.median())} USD; "
+            f"trung bình = {_number(prices.mean(), 1)} USD.\n"
+            f"Khung 0–{_number(display_max)} USD; {_number(outside)} bản ghi trên khung vẫn được giữ "
+            f"(giá cao nhất {_number(prices.max())} USD).",
+            fontsize=9, va="bottom",
+        )
+    return fig
 
-price_data = df["price"].dropna()
 
-# 1. Histogram
-ax1.hist(
-    price_data,
-    bins=100,
-    range=(0, 300),
-    color=WINE_RED,
-    alpha=0.75,
-    edgecolor="white",
-    linewidth=0.5,
-    label="Tần suất (Histogram)"
-)
+def plot_price_points(
+    df_price: pd.DataFrame,
+    *,
+    max_points: int = 15_000,
+    random_state: int = 42,
+    display_max: float = 300.0,
+) -> Figure:
+    """Draw a reproducible descriptive scatter without fitting a model."""
+    values = _price_sample(df_price)
+    if not isinstance(max_points, int) or max_points <= 0:
+        raise ValueError("Số điểm lấy mẫu phải là số nguyên dương.")
+    if not np.isfinite(display_max) or display_max <= 0:
+        raise ValueError("Giới hạn hiển thị giá phải dương và hữu hạn.")
+    plotted = (
+        values.sample(max_points, random_state=random_state)
+        if len(values) > max_points else values
+    )
+    visible = int(plotted["price"].le(display_max).sum())
+    outside = int(values["price"].gt(display_max).sum())
 
-# 2. KDE overlay trên trục thứ hai
-ax1_kde = ax1.twinx()
-sns.kdeplot(
-    price_data,
-    ax=ax1_kde,
-    color=WINE_GOLD,
-    linewidth=2.5,
-    clip=(0, 300),
-    label="Mật độ xác suất (KDE)"
-)
-ax1_kde.set_ylabel("")
-ax1_kde.set_yticks([])
+    with sns.axes_style("whitegrid"), sns.plotting_context("notebook"):
+        fig, ax = plt.subplots(figsize=(11, 6.2))
+        scatter = ax.scatter(
+            plotted["price"], plotted["points"], c=plotted["points"],
+            cmap="viridis", vmin=80, vmax=100, alpha=0.35, s=14, edgecolors="none",
+        )
+        ax.set(
+            xlim=(0, display_max), ylim=(79, 101), yticks=[80, 85, 90, 95, 100],
+            xlabel="Giá (USD)", ylabel="Điểm review (points, thang 80–100)",
+            title="Hình 2. Quan hệ giá và điểm review — khám phá sơ bộ",
+        )
+        fig.colorbar(scatter, ax=ax, pad=0.025, shrink=0.9, label="Điểm review")
+        fig.subplots_adjust(left=0.09, right=0.96, top=0.89, bottom=0.22)
+        fig.text(
+            0.09, 0.055,
+            f"Toàn mẫu: {_number(len(values))} bản ghi; lấy mẫu {_number(len(plotted))} "
+            f"(seed {random_state}); {_number(visible)} điểm nằm trong khung.\n"
+            f"Khung 0–{_number(display_max)} USD; toàn mẫu có {_number(outside)} bản ghi trên khung, "
+            f"vẫn được giữ (tối đa {_number(values['price'].max())} USD).",
+            fontsize=9, va="bottom",
+        )
+    return fig
 
-# 3. Median & Mean lines
-median_price = price_data.median()
-mean_price = price_data.mean()
-ax1.axvline(median_price, color="#1E88E5", linestyle="--", linewidth=2,
-            label=f"Trung vị (Median) = ${median_price:.0f}")
-ax1.axvline(mean_price, color="#FB8C00", linestyle="--", linewidth=2,
-            label=f"Trung bình (Mean) = ${mean_price:.1f}")
 
-# Trục & Nhãn
-ax1.set_xlabel("Giá (Đơn vị: USD)", fontsize=13, fontweight="bold")
-ax1.set_ylabel("Số lượng mẫu rượu (Chai)", fontsize=13, fontweight="bold")
-ax1.set_title("Phân Bố Giá Rượu Vang (Wine Price Distribution)", fontsize=15, fontweight="bold", pad=15)
-ax1.set_xlim(0, 300)
+def main() -> None:
+    """Preserve the existing CLI and filenames; allow a chosen export folder."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input", type=Path, default=DATA_PATH)
+    parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR)
+    args = parser.parse_args()
 
-# Khung thông tin: Số mẫu + Trục/Đơn vị + Kết luận
-conclusion_1 = (
-    f"• Số mẫu: N = {n_with_price:,} (loại trừ {n_missing_price:,} mẫu thiếu giá)\n"
-    f"• Trục X: Giá (USD) | Trục Y: Số lượng chai\n"
-    f"• Thống kê: Trung vị = ${median_price:.0f}, Trung bình = ${mean_price:.1f}\n"
-    f"• Kết luận: Phân bố bị lệch phải mạnh (right-skewed), tập trung chính ở phân khúc dưới $50.\n"
-    f"  → Khuyến nghị biến đổi log(price) hoặc phân khúc nhóm giá trước khi huấn luyện mô hình."
-)
-ax1.text(
-    0.98, 0.95, conclusion_1,
-    transform=ax1.transAxes,
-    fontsize=9.5,
-    verticalalignment="top",
-    horizontalalignment="right",
-    bbox=dict(boxstyle="round,pad=0.6", facecolor="#FFFFF0", edgecolor="#BDBDBD", alpha=0.92)
-)
+    # Only the command-line exporter selects a non-interactive backend.
+    plt.switch_backend("Agg")
+    df_all = pd.read_csv(args.input)
+    if "price" not in df_all:
+        raise ValueError("Dữ liệu thiếu cột price.")
+    df_price = df_all.loc[df_all["price"].notna()].copy()
+    print(
+        f"Cleaned records: {len(df_all):,}; observed price: {len(df_price):,}; "
+        f"missing price: {df_all['price'].isna().sum():,}"
+    )
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    for filename, plot in [
+        ("fig1_price_distribution.png", plot_price_distribution),
+        ("fig2_price_vs_points.png", plot_price_points),
+    ]:
+        fig = plot(df_price)
+        destination = args.output_dir / filename
+        fig.savefig(destination, dpi=300, bbox_inches="tight")
+        plt.close(fig)
+        print(f"Saved: {destination}")
 
-ax1.legend(loc="center right", fontsize=10.5)
-fig1.tight_layout()
-fig1.savefig(FIG1_PATH, dpi=300, bbox_inches="tight")
-plt.close(fig1)
-print(f"✓ Đã lưu Hình 1 tại: {FIG1_PATH}")
 
-# ══════════════════════════════════════════════════════════════════════
-# HÌNH 2 – Quan hệ Giá – Điểm (Price vs Points)
-# ══════════════════════════════════════════════════════════════════════
-print("Đang tạo Hình 2: Quan hệ Giá - Điểm ...")
-fig2, ax2 = plt.subplots(figsize=(10, 6))
-
-# Lấy mẫu ngẫu nhiên có seed để biểu đồ scatter thoáng và rõ ràng
-np.random.seed(42)
-if len(df) > 15000:
-    df_plot = df.sample(15000, random_state=42)
-else:
-    df_plot = df
-
-scatter = ax2.scatter(
-    df_plot["price"], df_plot["points"],
-    c=df_plot["points"], cmap="viridis",
-    alpha=0.35, s=14, edgecolors="none"
-)
-
-# Trục & Nhãn
-ax2.set_xlabel("Giá (Đơn vị: USD)", fontsize=13, fontweight="bold")
-ax2.set_ylabel("Điểm đánh giá (Đơn vị: Points, thang điểm 80–100)", fontsize=13, fontweight="bold")
-ax2.set_title("Mối Quan Hệ Giữa Giá Và Điểm Đánh Giá (Price vs. Points)", fontsize=15, fontweight="bold", pad=15)
-ax2.set_xlim(0, 300)
-ax2.set_ylim(79, 101)
-
-# Thanh màu điểm số (Colorbar)
-cbar = fig2.colorbar(scatter, ax=ax2, pad=0.02, shrink=0.85)
-cbar.set_label("Thang điểm (Points)", fontsize=10.5)
-
-# Khung thông tin: Số mẫu + Trục/Đơn vị + Kết luận
-conclusion_2 = (
-    f"• Số mẫu: N = {n_with_price:,} (hiển thị sample 15,000 điểm tránh chồng lấn)\n"
-    f"• Trục: Trục X = Giá (USD) | Trục Y = Điểm review (Points 80-100)\n"
-    f"• Nhận xét khám phá sơ bộ:\n"
-    f"  - Tồn tại xu hướng đồng biến: Rượu giá cao hầu như không có điểm thấp (< 85).\n"
-    f"  - Độ phân tán ở phân khúc phổ thông ($10 – $50) là rất lớn: cùng một mức giá\n"
-    f"    có thể đạt điểm từ 80 đến trên 95.\n"
-    f"  - Kết luận: Giá mang thông tin nhưng CHƯA ĐỦ để giải thích điểm review.\n"
-    f"    Cần thêm metadata (quốc gia, giống nho, vùng trồng) ở các bước tiếp theo."
-)
-ax2.text(
-    0.98, 0.05, conclusion_2,
-    transform=ax2.transAxes,
-    fontsize=9.5,
-    verticalalignment="bottom",
-    horizontalalignment="right",
-    bbox=dict(boxstyle="round,pad=0.6", facecolor="#FFFFF0", edgecolor="#BDBDBD", alpha=0.92)
-)
-
-fig2.tight_layout()
-fig2.savefig(FIG2_PATH, dpi=300, bbox_inches="tight")
-plt.close(fig2)
-print(f"✓ Đã lưu Hình 2 tại: {FIG2_PATH}")
-
-print("\n🎉 Hoàn thành! 2 hình ảnh đã được lưu tại:", OUTPUT_DIR)
+if __name__ == "__main__":
+    main()

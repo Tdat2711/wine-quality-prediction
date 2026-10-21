@@ -41,9 +41,9 @@ Bốn cấu hình dùng **cùng một mẫu và split**: `Dummy`, `price_only`, 
 | Consistency và duplicates | Đã xử lý | Xóa duplicate hoàn toàn; giữ và xuất các trường hợp nghi trùng logic để audit |
 | Outlier và noise | Đã xử lý bước đầu | Giữ phân khúc giá cao; hai lỗi giá đã được hiệu chỉnh có lưu dấu |
 | Automated tests | Đã có bước đầu | Hiện tập trung vào một số quy tắc cleaning quan trọng |
-| EDA và inference | Chưa hoàn thành | Sẽ triển khai theo câu hỏi hai tầng trong roadmap |
-| Modeling chính thức | Chưa bắt đầu | Chưa có split, pipeline so sánh hoặc metric chính thức |
-| Báo cáo tiến trình | Đang chuẩn bị | Buổi thứ Tư tuần 6 dùng một notebook chung, chưa có kết quả mô hình chính thức |
+| EDA và inference | Đã có EDA sơ bộ | Có hai hình, bảng khoảng giá và diễn giải; Spearman dành cho buổi sau |
+| Modeling chính thức | Chưa bắt đầu | Đã chốt split seed 42; chưa huấn luyện hoặc có metric chính thức |
+| Báo cáo tiến trình | Đủ nội dung EDA sơ bộ | Có bảng/hình, câu chuyện dữ liệu và phần split đã kiểm tra |
 
 Đầu ra cleaning là `data/processed/wine_cleaned_final.csv`, gồm **119.988 dòng và 19 cột**. Có **8.395 dòng thiếu giá** sau loại duplicate; **111.593 dòng** có giá quan sát được, dự kiến đủ điều kiện cho thí nghiệm chính. Dữ liệu raw có 8.996 giá thiếu. Nhóm chưa chạy so sánh mô hình, validation hoặc test chính thức.
 
@@ -159,7 +159,9 @@ python -m unittest discover -s tests
 jupyter notebook
 ```
 
-Hiện có notebook tìm hiểu dữ liệu và cleaning, cùng khung `notebooks/02_eda.ipynb` cho buổi đánh giá tiến trình. Mỗi thành viên sẽ nộp notebook phần việc trong `notebooks/w5_progress_parts/`; Khánh chọn và tích hợp các cell đã kiểm tra vào một notebook chung để trình bày. Các notebook inference và phân tích sai số được làm ở giai đoạn sau; `src/train_model.py` cũ không dùng cho kết quả cuối.
+Mở [notebooks/02_eda.ipynb](notebooks/02_eda.ipynb) để xem bản tổng hợp EDA sơ bộ: bảng bốn khoảng giá của Khánh, hai hình của Đô, bối cảnh/giả thuyết/câu chuyện dữ liệu của Dương đã hiệu chỉnh và phần chuẩn bị baseline của Dũng. Chọn kernel Python trong `.venv`, Restart Kernel và Run All để tạo lại kết quả. Dữ liệu chỉ được nạp một lần; chưa đọc các file split hoặc chạy mô hình/kiểm định.
+
+Các notebook cá nhân nằm trong `notebooks/w5_progress_parts/` để ghi nhận đóng góp; bản chính của Đô là [03_do_eda_plots.ipynb](notebooks/w5_progress_parts/03_do_eda_plots.ipynb). Bản hiệu chỉnh của [Dương](notebooks/w5_progress_parts/04_duong_story_stats.ipynb) có thống kê tính từ dữ liệu sạch và phân biệt quan sát với giả thuyết. Phần [chọn mẫu/split của Đạt](notebooks/w5_progress_parts/02_dat_data_split.ipynb) đã hoàn thành; Khánh chốt seed 42 ngày 21/10/2026. Spearman trên train và thử mô hình dành cho buổi sau. Các notebook inference và phân tích sai số được làm ở giai đoạn sau; `src/train_model.py` cũ không dùng cho kết quả cuối.
 
 ## 8. Quy ước modeling đã chốt
 
@@ -167,12 +169,12 @@ Hiện có notebook tìm hiểu dữ liệu và cleaning, cùng khung `notebooks
 - **Metric chính:** Mean Absolute Error (MAE).
 - **Metric phụ:** Root Mean Squared Error (RMSE) và \(R^2\).
 - **Mẫu so sánh:** chỉ dòng có giá quan sát được; dòng thiếu giá vẫn giữ trong cleaned data để audit.
-- **Split dự kiến:** xấp xỉ 70% train, 15% validation, 15% test; seed sẽ được khóa khi bắt đầu thí nghiệm, nhóm theo `title` đã chuẩn hóa để tránh cùng tên chai nằm ở hai tập.
+- **Split chốt ngày 21/10/2026:** seed **42**, nhóm theo `title` chuẩn hóa; train **78.106**, validation **16.745**, test **16.742** bản ghi, không chồng nhóm. Xem [báo cáo split](docs/data_split_report.md).
 - **Bốn cấu hình:** `DummyRegressor`, Ridge chỉ `log_price`, Ridge chỉ metadata, Ridge kết hợp; cùng mẫu, split và metric.
 - **Metadata chính:** `country`, `province`, `variety`, `vintage_year`. Không dùng nguyên văn review/title, người chấm hay audit fields làm predictor.
 - Imputer, encoder, scaler và mọi bước học từ dữ liệu chỉ được fit trên train.
 - Validation là kết quả sơ bộ; train-only GroupKFold chọn `alpha` từ cùng grid cho ba cấu hình Ridge.
-- Test set chỉ dùng trong một đợt sau khi model freeze; không tuning theo test.
+- Test chỉ đánh giá sau khi model freeze; không tuning theo test. EDA đã xem toàn mẫu và có ghi nhận holdout 42 từng được thử, nên không khẳng định test chưa từng được quan sát.
 - `description`, `title` và thông tin người đánh giá không được đưa vào baseline chính.
 
 ## 9. Kết quả
