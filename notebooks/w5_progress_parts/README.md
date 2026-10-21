@@ -29,3 +29,7 @@ df = pd.read_csv(root / "data" / "processed" / "wine_cleaned_final.csv")
 Nếu split chưa được kiểm tra, chỉ làm phân tích mô tả trên mẫu có giá và ghi *khám phá sơ bộ*. Không công bố kiểm định, metric validation hoặc dùng test. Sau khi Đạt nộp split và Khánh duyệt, mọi phân tích có tính kiểm định/mô hình dùng cùng train/validation đã khóa.
 
 Chỉ Khánh chỉnh `notebooks/02_eda.ipynb` để tích hợp các cell đã kiểm tra. Năm notebook ở đây được giữ trong repo làm bằng chứng đóng góp và để chạy lại; buổi thứ Tư chỉ mở notebook chung.
+
+## Trạng thái ngày 21/10/2026
+
+Khánh đã chốt seed **42** cho bộ split có giá của Đạt: **78.106 / 16.745 / 16.742** bản ghi train/validation/test, không chồng nhóm. Phần chọn mẫu/split đã hoàn thành. Buổi này trình bày EDA sơ bộ; Spearman và thử mô hình dành cho buổi sau. Notebook chung là nguồn minh chứng; PowerPoint hỗ trợ trình bày. EDA đã xem toàn mẫu có giá và dự án có ghi nhận holdout seed 42 từng được thử. Giữ seed 42 không xác nhận test hoàn toàn chưa từng được quan sát. Giữ lịch sử này khi diễn giải kết quả; không đổi seed để chọn kết quả thuận lợi và không tuning theo test.

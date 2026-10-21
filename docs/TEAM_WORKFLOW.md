@@ -87,7 +87,7 @@ Reviewer kiểm tra:
 
 - Đặt tên theo thứ tự chạy: `02_eda.ipynb`, `03_statistical_inference.ipynb`, `04_error_analysis.ipynb`.
 - Mỗi notebook có phần mục tiêu, dữ liệu đầu vào, phương pháp, kết quả và kết luận.
-- Riêng buổi đánh giá tiến trình thứ Tư tuần 6: mỗi người nộp một notebook phần việc trong `notebooks/w5_progress_parts/`, giữ lại trong repo. Khánh là người duy nhất tích hợp các cell cần thiết vào `notebooks/02_eda.ipynb`; chỉ notebook chung này được dùng để trình bày, không làm slide cho buổi này.
+- Riêng buổi đánh giá tiến trình thứ Tư tuần 6: mỗi người nộp một notebook phần việc trong `notebooks/w5_progress_parts/`, giữ lại trong repo. Khánh là người duy nhất tích hợp các cell cần thiết vào `notebooks/02_eda.ipynb`; notebook chung là nguồn minh chứng có thể chạy lại. Theo yêu cầu ngày 21/10/2026, nhóm dùng thêm PowerPoint hỗ trợ trình bày.
 - Các notebook phần việc đều đọc cùng cleaned data, không chạy lại cleaning riêng hoặc chỉ dán ảnh kết quả. Chỉ chuyển code, bảng/hình và nhận xét đã kiểm tra vào notebook chung; không sao chép năm lần bước nạp dữ liệu.
 - Đọc dữ liệu bằng đường dẫn tương đối tính từ project root.
 - Dùng seed cố định khi có phép lấy mẫu hoặc thuật toán ngẫu nhiên.
@@ -106,12 +106,12 @@ Reviewer kiểm tra:
 
 - Target chính là `points`; không dùng `quality`.
 - Chia train/validation/test trước khi fit bước học từ dữ liệu.
-- Split xấp xỉ 70/15/15, seed cố định được chốt trước khi chạy, nhóm theo `title` chuẩn hóa; ưu tiên không để cùng tên chai ở hai tập hơn là ép tỷ lệ dòng chính xác tuyệt đối.
+- Split xấp xỉ 70/15/15, nhóm theo `title` chuẩn hóa; Khánh chốt giữ seed **42 ngày 21/10/2026** cho bộ chia hiện tại; ưu tiên không để cùng tên chai ở hai tập hơn là ép tỷ lệ dòng chính xác tuyệt đối.
 - Bốn cấu hình Dummy / chỉ giá / chỉ metadata / kết hợp phải dùng cùng tập dòng và split. Metadata chính: `country`, `province`, `variety`, `vintage_year`; giá dùng `log1p(price)`.
 - Imputer, scaler, encoder, rare-category mapping và feature selection chỉ fit trên train.
 - Cross-validation và validation dùng để chọn feature/model/hyperparameter.
 - Buổi đánh giá tiến trình thứ Tư tuần 6 trình bày câu hỏi hai tầng và EDA giá–điểm bằng một notebook; cleaning chỉ tóm tắt vì đã báo cáo trước. Nếu split chưa được xác nhận, biểu đồ trên mẫu có giá chỉ là khám phá sơ bộ, không công bố metric kiểm định/hồi quy. Nếu split đã được xác nhận, có thể trình bày Spearman trên train và `DummyRegressor`/`LinearRegression` chỉ giá trên train/validation như kết quả thử; không yêu cầu metric để được báo cáo và không dùng số giả.
-- So sánh hồi quy **chính thức** bốn cấu hình ở tuần 9 của lịch học thực tế; kết quả thử trước đó không thay thế bước này. Test set mới chỉ được đánh giá ở tuần 10 sau khi giao thức và mô hình đã khóa, với sự xác nhận của Khánh; không dùng lại holdout seed 42 từng chạy thử.
+- So sánh hồi quy **chính thức** bốn cấu hình ở tuần 9 của lịch học thực tế; kết quả thử trước đó không thay thế bước này. Test đánh giá ở tuần 10 sau khi giao thức và mô hình đã khóa, với sự xác nhận của Khánh. Quyết định 21/10/2026 giữ seed 42 thay cho yêu cầu đổi holdout trước đó. EDA đã xem toàn mẫu có giá và dự án có ghi nhận holdout seed 42 từng được thử. Giữ seed 42 không xác nhận test hoàn toàn chưa từng được quan sát. Giữ lịch sử này khi diễn giải kết quả; không đổi seed để chọn kết quả thuận lợi và không tuning theo test.
 - Không tuning sau khi xem test. Nếu phát hiện lỗi kỹ thuật làm kết quả test vô hiệu, phải ghi biên bản, sửa lỗi và công bố rõ lần chạy lại.
 - Mọi model phải được so với `DummyRegressor`.
 - Metric chính là MAE; RMSE và \(R^2\) là metric phụ.

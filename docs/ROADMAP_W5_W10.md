@@ -1,6 +1,6 @@
 # Roadmap dự án — Tuần 5 đến tuần 10
 
-Buổi thứ Tư tuần 6 là **đánh giá tiến trình**, không phải bảo vệ mô hình cuối. Nhóm trình bày bằng **một notebook chung** `notebooks/02_eda.ipynb`, không làm slide cho buổi này. Mỗi người tự tạo và nộp một notebook phần việc trong `notebooks/w5_progress_parts/`; các file này được giữ để chạy lại và ghi nhận đóng góp. Khánh tạo khung notebook chung từ sớm, tích hợp dần các cell cần trình bày và kiểm tra bản cuối; không làm thay phần phân tích của thành viên khác. Không để nhiều người cùng sửa trực tiếp notebook chung.
+Buổi thứ Tư tuần 6 là **đánh giá tiến trình**, không phải bảo vệ mô hình cuối. Nhóm dùng **một notebook chung** `notebooks/02_eda.ipynb` làm nguồn minh chứng; theo yêu cầu ngày 21/10/2026, có thêm PowerPoint hỗ trợ trình bày. Mỗi người tự tạo và nộp một notebook phần việc trong `notebooks/w5_progress_parts/`; các file này được giữ để chạy lại và ghi nhận đóng góp. Khánh tạo khung notebook chung từ sớm, tích hợp dần các cell cần trình bày và kiểm tra bản cuối; không làm thay phần phân tích của thành viên khác. Không để nhiều người cùng sửa trực tiếp notebook chung.
 
 Mỗi notebook cá nhân cần nêu mục tiêu, đọc cùng `data/processed/wine_cleaned_final.csv`, chứa code tạo lại bảng/hình, kết quả, 2–3 nhận xét và giới hạn. Không làm sạch dữ liệu lần nữa hoặc chỉ nộp ảnh chụp kết quả. Nếu split chưa được xác nhận, phân tích trên mẫu có giá chỉ là **khám phá sơ bộ**; không chạy kiểm định/hồi quy để công bố metric. Không dùng test set trước bước đánh giá cuối.
 
@@ -14,13 +14,13 @@ Mỗi notebook cá nhân cần nêu mục tiêu, đọc cùng `data/processed/wi
 | Dương | Trong `04_duong_story_stats.ipynb`, viết bối cảnh → vấn đề → câu hỏi và giả thuyết về liên hệ giá–điểm; giải thích điểm review không phải chất lượng khách quan. Chỉ khi split đã được xác nhận, có thể kiểm tra Spearman sơ bộ trên train, báo số mẫu, hệ số, p-value và giới hạn diễn giải. |
 | Dũng | Trong `05_dung_baseline.ipynb`, giải thích ý nghĩa bốn cấu hình dự kiến. Chỉ khi split đã được xác nhận, có thể fit `DummyRegressor` và `LinearRegression` chỉ dùng `log_price` trên train, so MAE validation trên cùng mẫu; ghi rõ đây là kết quả thử, không phải mô hình cuối. Chuyển khảo sát metadata chi tiết sang tuần 6. |
 
-Năm notebook cá nhân đặt trong `notebooks/w5_progress_parts/`. **Đầu ra bắt buộc trước thứ Tư** là notebook chung có câu hỏi, bảng chọn mẫu, bảng bốn khoảng giá, hai biểu đồ và nhận xét đã kiểm tra. Kiểm định/hồi quy thử chỉ đưa vào nếu split và phép tính đã được kiểm tra trước khi chốt notebook tối thứ Ba; nếu chưa có, ghi rõ “chưa có kết quả”, không ước lượng số liệu. Chỉ `02_eda.ipynb` được mở để trình bày.
+Năm notebook cá nhân đặt trong `notebooks/w5_progress_parts/`. **Đầu ra bắt buộc trước thứ Tư** là notebook chung có câu hỏi, bảng chọn mẫu, bảng bốn khoảng giá, hai biểu đồ và nhận xét đã kiểm tra. Kiểm định/hồi quy thử chỉ đưa vào nếu split và phép tính đã được kiểm tra trước khi chốt notebook tối thứ Ba; nếu chưa có, ghi rõ “chưa có kết quả”, không ước lượng số liệu. PowerPoint tóm tắt kết quả; mở `02_eda.ipynb` khi cần đối chiếu code và số liệu.
 
 ## Tuần 6 — Tiếp tục sau buổi đánh giá tiến trình
 
 | Người phụ trách | Nhiệm vụ |
 |---|---|
-| Khánh | Ghi góp ý của giảng viên và sửa câu hỏi nghiên cứu nếu cần. Duyệt và khóa split do Đạt tạo; không dùng lại holdout seed 42 từng chạy thử. Trên train, lập bảng `points` trung vị theo khoảng giá trong 2–3 quốc gia đủ mẫu; không làm lại bảng bốn khoảng giá chung đã nộp. |
+| Khánh | Ghi góp ý của giảng viên và sửa câu hỏi nghiên cứu nếu cần. Đã duyệt bộ split theo nhóm tên rượu, giữ seed 42 ngày 21/10/2026; giữ ghi nhận holdout này từng được thử, không khẳng định test chưa từng được quan sát. Trên train, lập bảng `points` trung vị theo khoảng giá trong 2–3 quốc gia đủ mẫu; không làm lại bảng bốn khoảng giá chung đã nộp. |
 | Đạt | Hoàn tất split theo nhóm `title` nếu chưa xong, lưu quy tắc/seed và số dòng từng tập; kiểm tra không chồng nhóm. Tự so sánh `points` trung vị và tỷ lệ các quốc gia phổ biến giữa nhóm có giá và nhóm thiếu giá; nhận xét khả năng mẫu có giá không đại diện toàn bộ dữ liệu. |
 | Đô | Sửa hai hình cốt lõi theo góp ý và chạy lại trên train sau khi split đã khóa; thêm một hình so sánh trong nhóm đủ mẫu, không vẽ lại hình của thành viên khác. |
 | Dương | Từ thống kê mô tả và góp ý, viết một trang câu chuyện dữ liệu: điều đã quan sát, câu hỏi còn mở và giới hạn. Hoàn tất/kiểm tra kết quả Spearman sơ bộ nếu tuần trước chưa có; tách rõ phát hiện sơ bộ với kiểm định chính thức tuần 8. |
@@ -61,7 +61,7 @@ Năm notebook cá nhân đặt trong `notebooks/w5_progress_parts/`. **Đầu ra
 | Người phụ trách | Nhiệm vụ |
 |---|---|
 | Khánh | Chốt bốn cấu hình theo validation và kiểm tra lệnh đánh giá trước khi Dũng mở test. Sau khi có metric test, tự tính và giải thích chênh lệch MAE giữa chỉ giá và kết hợp; ghép code, báo cáo và phần trình bày kết quả hai tầng. |
-| Đạt | Chạy lại pipeline từ dữ liệu gốc, đối chiếu số dòng, checksum và split/holdout mới. Viết phần nguồn dữ liệu, cleaning và khả năng tái lập cho báo cáo cuối. |
+| Đạt | Chạy lại pipeline từ dữ liệu gốc, đối chiếu số dòng, checksum và split/holdout seed 42 đã chốt, kèm lịch sử sử dụng. Viết phần nguồn dữ liệu, cleaning và khả năng tái lập cho báo cáo cuối. |
 | Đô | Sau khi có kết quả test hợp lệ, cập nhật hình so sánh điểm thật–dự đoán và sai số theo nhóm. Hoàn thiện hình, chú thích và phần trực quan hóa trong báo cáo. |
 | Dương | Viết phần tổng hợp EDA, kiểm định, ý nghĩa của chênh lệch sai số, bias, đạo đức khi diễn giải điểm review và giới hạn. Chuẩn bị lời giải thích “đã có điểm thật thì dự đoán để làm gì?”. |
 | Dũng | Sau khi Khánh khóa cấu hình và duyệt lệnh, chạy một đợt đánh giá test cho cả bốn mô hình; xuất bảng MAE/RMSE/R² và dự đoán để nhóm phân tích. Lưu model, cấu hình và lệnh chạy lại cho bài nộp. |
