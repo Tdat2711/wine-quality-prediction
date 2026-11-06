@@ -9,3 +9,9 @@ __pycache__/
 
 # Bỏ qua thư mục chứa dữ liệu thô (có dung lượng lớn)
 
+# File dữ liệu trung gian/sinh tự động
+data/interim/*.csv
+data/processed/wine_missing_values_handled.csv
+data/processed/wine_basic_formatted.csv
+data/processed/wine_outliers_noise_handled.csv
+data/processed/wine_ready_for_ML.csv

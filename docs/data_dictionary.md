@@ -6,7 +6,7 @@ Các con số dưới đây được tính trên file raw và chưa qua làm s�
 
 | Tên cột | Ý nghĩa | Kiểu dữ liệu thực tế | Unique (không tính null) | Missing | Ghi chú |
 |---|---|---:|---:|---:|---|
-| `Unnamed: 0` | Chỉ mục dòng được lưu kèm khi xuất CSV | `int64` | 129.971 | 0 | Cột đầu không có tên trong file gốc; giá trị 0–129.970 và duy nhất. Chưa xóa. |
+| `Unnamed: 0` | Chỉ mục dòng được lưu kèm khi xuất CSV | `int64` | 129.971 | 0 | Cột đầu không có tên trong file gốc; giá trị 0–129.970 và duy nhất. Chỉ mô tả raw; đã bỏ khỏi cleaned data. |
 | `country` | Quốc gia sản xuất rượu | chuỗi | 43 | 63 | Biến phân loại; cần thống nhất cách xử lý missing. |
 | `description` | Nội dung đánh giá rượu | chuỗi | 119.955 | 0 | Văn bản tự do; phát hiện 1 giá trị có khoảng trắng đầu/cuối. |
 | `designation` | Tên dòng rượu hoặc tên do nhà sản xuất đặt | chuỗi | 37.979 | 37.465 | Missing nhiều; có 5 giá trị có khoảng trắng đầu/cuối. |
@@ -27,3 +27,23 @@ Các con số dưới đây được tính trên file raw và chưa qua làm s�
 - `Unique` không tính giá trị rỗng.
 - Kiểu “chuỗi” có thể hiển thị là `object` hoặc `str` tùy phiên bản pandas; ý nghĩa dữ liệu không đổi.
 - Data dictionary này chỉ mô tả dữ liệu. Mọi quyết định sửa/xóa phải được ghi vào cleaning log.
+
+## Các trường trong cleaned data và vai trò thí nghiệm
+
+File `data/processed/wine_cleaned_final.csv` sau loại trùng có 119.988 dòng × 19 cột. `price` còn 8.395 giá trị thiếu; mẫu chính có 111.593 dòng giá quan sát. Dữ liệu raw ở bảng trên không bị sửa.
+
+| Trường | Cách tạo / ý nghĩa | Vai trò |
+|---|---|---|
+| `points` | Điểm do người đánh giá chấm | Target; không phải chất lượng khách quan |
+| `log_price` | `log1p(price)` với giá quan sát, thiếu nếu `price` thiếu | Feature số của mô hình kết hợp dự kiến |
+| `country`, `province`, `variety`, `vintage_year` | Metadata sản phẩm; năm trích có quy tắc từ `title` | Feature sản phẩm của mô hình kết hợp dự kiến |
+| `price_original` | Giá trước hai sửa lỗi nhập đã biết, kể cả trạng thái thiếu | Audit, không đưa vào model |
+| `price_was_missing` | Giá thiếu ở dòng đã làm sạch | Audit và chọn mẫu, không đưa vào model |
+| `price_was_corrected` | Một trong hai giá đã sửa có lưu dấu | Audit, không đưa vào model |
+| `title` | Tiêu đề, chuẩn hóa chữ thường/khoảng trắng khi chia nhóm | Chống title-group overlap; không đưa nguyên văn vào model |
+| `description` | Lời review của người đánh giá | Predictor văn bản dự kiến, TF-IDF unigram/bigram fit trên train |
+| `taster_name`, `taster_twitter_handle` | Thông tin người đánh giá | Audit/bias, không làm predictor chính |
+
+Các nhãn phân loại thiếu như `Unknown` là giá trị quy ước theo từng dòng; không suy luận quốc gia hoặc tỉnh từ ánh xạ học trên toàn bộ dữ liệu trước split.
+
+`price` là giá gốc; dùng `log_price` thay vì đồng thời hai biểu diễn trong thiết kế mặc định. `region_1`, `region_2`, `winery`, `designation` là dữ liệu bổ trợ chưa chọn làm predictor chính. `is_non_informative_review` là cờ review dưới 10 từ, chỉ để audit; không tự loại review. `title_clean` chỉ có trong file split, phục vụ chia nhóm. Chưa fit TF-IDF hay huấn luyện mô hình.

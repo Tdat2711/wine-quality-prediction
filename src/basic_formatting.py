@@ -1,30 +1,26 @@
-"""Format data types and handle statistical outliers."""
+"""Apply numeric type formatting without deleting valid statistical outliers."""
 
 import pandas as pd
 
-def format_and_handle_outliers(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, int]]:
+
+def format_and_handle_outliers(
+    df: pd.DataFrame,
+) -> tuple[pd.DataFrame, dict[str, int]]:
+    """Backward-compatible formatter retained for older imports.
+
+    Statistical outliers are not removed here. Domain-aware outlier and noise
+    handling is implemented in ``handle_outliers_and_noise.process_dataset``.
+    """
     cleaned = df.copy(deep=True)
-    initial_rows = len(cleaned)
-    report: dict[str, int] = {}
+    report: dict[str, int] = {"outliers_removed": 0}
 
-    # 1. Ép kiểu (Type Casting)
-    if 'price' in cleaned.columns:
-        cleaned['price'] = pd.to_numeric(cleaned['price'], errors='coerce')
-    if 'points' in cleaned.columns:
-        cleaned['points'] = pd.to_numeric(cleaned['points'], errors='coerce')
-
-    # 2. Xử lý ngoại lai (Outliers) bằng phương pháp IQR cho giá rượu
-    if 'price' in cleaned.columns:
-        Q1 = cleaned['price'].quantile(0.25)
-        Q3 = cleaned['price'].quantile(0.75)
-        IQR = Q3 - Q1
-        upper_bound = Q3 + 1.5 * IQR
-
-        # Lọc giữ lại giá hợp lý (hoặc các dòng chưa có giá trị)
-        valid_price_mask = (cleaned['price'] <= upper_bound) | cleaned['price'].isna()
-        cleaned = cleaned[valid_price_mask]
-
-    cleaned = cleaned.reset_index(drop=True)
-    report["outliers_removed"] = initial_rows - len(cleaned)
+    for column in ("price", "points"):
+        if column in cleaned.columns:
+            before_missing = int(cleaned[column].isna().sum())
+            cleaned[column] = pd.to_numeric(cleaned[column], errors="coerce")
+            after_missing = int(cleaned[column].isna().sum())
+            report[f"{column}_values_coerced_to_missing"] = (
+                after_missing - before_missing
+            )
 
     return cleaned, report
