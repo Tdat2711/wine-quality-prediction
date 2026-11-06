@@ -1,8 +1,4 @@
-"""Shared descriptive price plots for progress notebooks and PNG export.
-
-Importing this module does not read data, write figures, or change the backend.
-Run python src/create_eda_plots.py to refresh the existing two PNG exports.
-"""
+"""Reproducible train-only EDA; imports have no data or plotting side effects."""
 
 from __future__ import annotations
 
@@ -19,7 +15,7 @@ import seaborn as sns
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = PROJECT_ROOT / "data" / "processed" / "wine_cleaned_final.csv"
-OUTPUT_DIR = PROJECT_ROOT / "outputs" / "eda_plots"
+OUTPUT_DIR = PROJECT_ROOT / "outputs" / "eda"
 
 
 def _number(value: float, decimals: int = 0) -> str:
@@ -144,34 +140,169 @@ def plot_price_points(
     return fig
 
 
-def main() -> None:
-    """Preserve the existing CLI and filenames; allow a chosen export folder."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=DATA_PATH)
-    parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR)
-    args = parser.parse_args()
+def build_eda_tables(cleaned, train):
+    """Describe cleaned-data audit and train features; never fit TF-IDF."""
+    from sklearn.feature_extraction.text import CountVectorizer
 
-    # Only the command-line exporter selects a non-interactive backend.
-    plt.switch_backend("Agg")
-    df_all = pd.read_csv(args.input)
-    if "price" not in df_all:
-        raise ValueError("Dữ liệu thiếu cột price.")
-    df_price = df_all.loc[df_all["price"].notna()].copy()
-    print(
-        f"Cleaned records: {len(df_all):,}; observed price: {len(df_price):,}; "
-        f"missing price: {df_all['price'].isna().sum():,}"
-    )
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    for filename, plot in [
-        ("fig1_price_distribution.png", plot_price_distribution),
-        ("fig2_price_vs_points.png", plot_price_points),
-    ]:
-        fig = plot(df_price)
-        destination = args.output_dir / filename
-        fig.savefig(destination, dpi=300, bbox_inches="tight")
+    _price_sample(train)
+    texts = train['description'].fillna('')
+    lengths = texts.str.split().str.len()
+    tables = {
+        'audit_missing': pd.DataFrame({
+            'column': cleaned.columns, 'dtype': cleaned.dtypes.astype(str).values,
+            'missing': cleaned.isna().sum().values,
+            'missing_pct': cleaned.isna().mean().mul(100).values}),
+        'sample_counts': pd.DataFrame([
+            {'sample': 'cleaned', 'rows': len(cleaned)},
+            {'sample': 'observed_price', 'rows': int(cleaned['price'].notna().sum())},
+            {'sample': 'missing_price', 'rows': int(cleaned['price'].isna().sum())},
+            {'sample': 'train', 'rows': len(train)}]),
+        'numeric_summary': train[['points', 'price', 'log_price', 'vintage_year']].describe().T,
+        'points_counts': train['points'].value_counts().sort_index().rename_axis('points').reset_index(name='rows'),
+        'review_summary': pd.DataFrame([{
+            'rows': len(train), 'empty_reviews': int(texts.str.strip().eq('').sum()),
+            'under_10_words': int(lengths.lt(10).sum()),
+            'flagged_non_informative': int(train['is_non_informative_review'].sum()),
+            'median_words': lengths.median(), 'min_words': lengths.min(), 'max_words': lengths.max()}]),
+        'review_lengths': lengths.rename('words').to_frame(),
+    }
+    tiers = pd.qcut(train['price'], 4, duplicates='drop')
+    tables['price_tiers'] = train.groupby(tiers, observed=True).agg(
+        rows=('points', 'size'), price_median=('price', 'median'),
+        points_median=('points', 'median'), points_mean=('points', 'mean'))
+    tables['price_tiers'].index.name = 'price_interval_usd'
+    for column in ['country', 'province', 'variety']:
+        groups = train.assign(**{column: train[column].fillna('Unknown')}).groupby(column).agg(
+            rows=('points', 'size'), missing_price=('price', lambda x: int(x.isna().sum())),
+            price_median=('price', 'median'), points_mean=('points', 'mean'),
+            points_median=('points', 'median'))
+        tables[f'groups_{column}'] = groups.sort_values('rows', ascending=False)
+    # Descriptive occurrence counts, including negations; no learned model weights.
+    for n, label in [(1, 'unigrams'), (2, 'bigrams')]:
+        vectorizer = CountVectorizer(ngram_range=(n, n), stop_words=None, min_df=1)
+        try:
+            matrix = vectorizer.fit_transform(texts)
+        except ValueError as error:
+            if 'empty vocabulary' not in str(error):
+                raise
+            tables[label] = pd.DataFrame(columns=['term', 'occurrences', 'documents'])
+            continue
+        counts = np.asarray(matrix.sum(axis=0)).ravel()
+        docs = np.asarray((matrix > 0).sum(axis=0)).ravel()
+        terms = pd.DataFrame({'term': vectorizer.get_feature_names_out(),
+                              'occurrences': counts, 'documents': docs})
+        tables[label] = terms.sort_values(['occurrences', 'term'], ascending=[False, True]).head(30).reset_index(drop=True)
+    return tables
+
+
+def metadata_groups(train, column, min_rows=100, top=10):
+    """Select the largest groups, excluding small and placeholder groups."""
+    values = train[column].fillna('Unknown')
+    counts = values.value_counts()
+    selected = counts[(counts >= min_rows) & ~counts.index.isin(['Unknown', 'Not applicable', 'Not specified'])]
+    return list(selected.head(top).index)
+
+
+def create_eda_figures(train, tables):
+    """Return figures without exporting or modifying input data."""
+    figures = {}
+    n = len(train)
+    with sns.axes_style('whitegrid'):
+        fig, ax = plt.subplots(figsize=(10, 5))
+        counts = tables['points_counts']
+        ax.bar(counts['points'], counts['rows'], color='#722F37')
+        ax.set(xlabel='Điểm review (points)', ylabel='Số bản ghi',
+               title=f'Phân bố điểm review — train (n={n:,})', xticks=range(80, 101, 2))
+        figures['01_points_distribution'] = fig
+
+        fig, axes = plt.subplots(1, 2, figsize=(13, 5))
+        axes[0].hist(train['price'], bins=80, color='#722F37')
+        axes[0].set(xlabel='Giá (USD)', ylabel='Số bản ghi', title='Giá gốc — giữ toàn bộ đuôi giá cao')
+        axes[1].hist(train['log_price'], bins=60, color='#285C76')
+        axes[1].set(xlabel='log1p(price)', ylabel='Số bản ghi', title='Giá sau biến đổi log1p')
+        fig.suptitle(f'Phân bố giá — train (n={n:,})')
+        figures['02_price_distribution'] = fig
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+        sampled = train.sample(min(15000, n), random_state=42)
+        ax.scatter(sampled['price'], sampled['points'], s=9, alpha=0.18, color='#285C76')
+        ax.set_xscale('log')
+        ax.set(xlabel='Giá (USD, trục log)', ylabel='Điểm review (points)',
+               title=f'Giá và điểm — train n={n:,}; hiển thị {len(sampled):,}, seed 42')
+        figures['03_price_points'] = fig
+
+        for column, label in [('country', 'quốc gia'), ('province', 'vùng'), ('variety', 'giống nho')]:
+            order = metadata_groups(train, column)
+            fig, ax = plt.subplots(figsize=(12, 6))
+            selected = train.loc[train[column].isin(order)]
+            if order:
+                sns.boxplot(data=selected, x='points', y=column, order=order, ax=ax, color='#A8C7D4', fliersize=1)
+                counts = train[column].value_counts()
+                ax.set_yticks(range(len(order)), [f'{value} (n={counts[value]:,})' for value in order])
+            else:
+                ax.text(0.5, 0.5, 'Không có nhóm đạt ngưỡng 100 bản ghi', ha='center', transform=ax.transAxes)
+            ax.set(xlabel='Điểm review (points)', ylabel='',
+                   title=f'Điểm theo {label} — tối đa 10 nhóm đông nhất, n nhóm ≥ 100 (train)')
+            figures[f'04_{column}_points'] = fig
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.hist(tables['review_lengths']['words'], bins=60, color='#285C76')
+        ax.set(xlabel='Số từ (tách theo khoảng trắng)', ylabel='Số review',
+               title=f'Độ dài review — train (n={n:,}); không tự loại review ngắn')
+        figures['05_review_length'] = fig
+
+        for label in ['unigrams', 'bigrams']:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            top = tables[label].head(15).iloc[::-1]
+            ax.barh(top['term'], top['occurrences'], color='#285C76')
+            ax.set(xlabel='Tổng số lần xuất hiện trên train', ylabel='',
+                   title=f'{label.capitalize()} phổ biến — giữ stopword và từ phủ định')
+            figures[f'06_{label}'] = fig
+    for fig in figures.values():
+        fig.tight_layout()
+    return figures
+
+
+def run_eda(output_dir=OUTPUT_DIR):
+    """Read audit data plus train; read only text/title from held-out splits."""
+    from src.split_data import review_overlap
+
+    cleaned = pd.read_csv(DATA_PATH)
+    split_dir = DATA_PATH.parent / 'splits'
+    train = pd.read_csv(split_dir / 'train.csv')
+    tables = build_eda_tables(cleaned, train)
+    text_parts = {'train': train[['description']]}
+    for name in ['val', 'test']:
+        text_parts[name] = pd.read_csv(split_dir / f'{name}.csv', usecols=['description'])
+    tables['review_overlap'] = review_overlap(text_parts)
+    out = Path(output_dir)
+    (out / 'tables').mkdir(parents=True, exist_ok=True)
+    (out / 'figures').mkdir(parents=True, exist_ok=True)
+    indexed = {'numeric_summary', 'price_tiers', 'review_lengths',
+               'groups_country', 'groups_province', 'groups_variety'}
+    for name, table in tables.items():
+        table.to_csv(out / 'tables' / f'{name}.csv', index=name in indexed)
+    figures = create_eda_figures(train, tables)
+    for name, fig in figures.items():
+        fig.savefig(out / 'figures' / f'{name}.png', dpi=160, bbox_inches='tight')
         plt.close(fig)
-        print(f"Saved: {destination}")
+    return tables
 
 
-if __name__ == "__main__":
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output-dir', type=Path, default=OUTPUT_DIR)
+    args = parser.parse_args()
+    plt.switch_backend('Agg')
+    # Support both direct invocation and module imports from notebooks.
+    import sys
+    if str(PROJECT_ROOT) not in sys.path:
+        sys.path.insert(0, str(PROJECT_ROOT))
+    tables = run_eda(args.output_dir)
+    print(tables['sample_counts'].to_string(index=False))
+    print(tables['review_overlap'].to_string(index=False))
+    print(f'EDA saved to: {args.output_dir}')
+
+
+if __name__ == '__main__':
     main()

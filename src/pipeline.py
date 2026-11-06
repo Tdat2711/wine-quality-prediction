@@ -83,7 +83,7 @@ def run_cleaning_stage() -> pd.DataFrame:
 
     print(f"Hoàn tất cleaning: {df.shape}")
     print(
-        "Mẫu đủ điều kiện cho so sánh hai tầng (có giá quan sát): "
+        "Mẫu đủ điều kiện cho split (có giá quan sát): "
         f"{validation['model_eligible_rows']:,} dòng"
     )
     print(f"Đầu ra: {CLEANED_DATA_PATH}")

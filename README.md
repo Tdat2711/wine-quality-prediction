@@ -1,239 +1,244 @@
-# Phân tích và dự đoán điểm đánh giá rượu từ giá và thông tin sản phẩm
+# Phân tích và dự đoán điểm review rượu từ thông tin sản phẩm và văn bản
 
-Dự án khoa học dữ liệu dùng **Wine Reviews 130k** để trả lời: **giá giúp dự đoán điểm review `points` đến đâu, và metadata bổ sung được bao nhiêu?** Mô hình là công cụ so sánh các nguồn thông tin; dự đoán không thay thế điểm review đã có và không đo "chất lượng khách quan".
+Dự án sử dụng **Wine Reviews 130k** để tìm hiểu quan hệ giữa giá, đặc điểm sản phẩm, nội dung đánh giá và điểm review `points`. Hướng mô hình dự kiến là **kết hợp thông tin sản phẩm đã mã hóa với vector TF-IDF của review, rồi dùng Ridge để dự đoán điểm**.
 
+Đơn vị quan sát là **một bản ghi review**, không mặc định là một chai rượu duy nhất. Một tên rượu có thể có nhiều review. `points` là đánh giá của người chấm, không phải phép đo chất lượng khách quan.
 
-## 1. Câu hỏi nghiên cứu
+## 1. Bối cảnh và câu hỏi nghiên cứu
 
-Dự án tập trung trả lời ba câu hỏi:
+Người mua thường tham khảo giá, xuất xứ, giống nho và lời đánh giá khi lựa chọn rượu. Tuy nhiên, giá cao không bảo đảm mọi review đều cho điểm cao; dữ liệu cũng có sự khác nhau về nhóm sản phẩm và người chấm. Nhóm dùng phân tích dữ liệu để mô tả những liên hệ này và xây dựng một quy trình dự đoán có thể kiểm tra lại.
 
-1. Chỉ biết giá, mô hình dự đoán `points` tốt hơn một dự đoán ngây thơ bao nhiêu?
-2. Thêm `country`, `province`, `variety`, `vintage_year` có giảm sai số so với chỉ giá không?
-3. Mô hình còn sai ở nhóm giá, quốc gia, giống nho hoặc người đánh giá nào?
+**Câu hỏi chính:** Kết hợp thông tin sản phẩm và nội dung review dự đoán điểm đánh giá rượu tốt đến đâu?
 
-Bốn cấu hình dùng **cùng một mẫu và split**: `Dummy`, `price_only`, `metadata_only`, `combined`. Chênh lệch MAE giữa `price_only` và `combined` đo **giá trị dự đoán bổ sung** của metadata, không phải quan hệ nhân quả.
+Các câu hỏi hỗ trợ:
 
-## 2. Mục tiêu và phạm vi
+1. Giá và điểm review có quan hệ như thế nào? Xu hướng giữa các khoảng giá có giống nhau không?
+2. Điểm và số lượng review khác nhau như thế nào giữa các quốc gia, vùng và giống nho?
+3. Văn bản review có đặc điểm gì về độ dài và từ/cụm từ phổ biến?
+4. Mô hình kết hợp còn sai ở những nhóm nào, và kết quả có giới hạn gì khi sử dụng?
 
-### Mục tiêu chính
+Một mô hình kết hợp duy nhất **chưa chứng minh review cải thiện dự đoán bao nhiêu**. Muốn trả lời riêng điều này cần bổ sung mô hình chỉ thông tin sản phẩm để đối chiếu trên cùng bản ghi và split. So sánh A/B/C không phải yêu cầu triển khai hiện tại.
 
-- Audit, làm sạch và kiểm tra chất lượng dữ liệu theo một pipeline có thể chạy lại.
-- Thực hiện exploratory data analysis (EDA) và trực quan hóa các quan hệ quan trọng.
-- Sử dụng statistical inference để kiểm tra các giả thuyết có ý nghĩa với bài toán.
-- Xây dựng feature engineering và preprocessing không gây data leakage.
-- Huấn luyện, so sánh và đánh giá các mô hình hồi quy.
-- Phân tích residual, bias, ethics và giới hạn sử dụng kết quả.
-- Tạo báo cáo và slide có đủ bằng chứng để bảo vệ cuối kỳ.
+## 2. Nhiệm vụ và đầu ra của dự án
 
-### Ngoài phạm vi chính hiện tại
-
-- Web, API và deployment không phải ưu tiên từ tuần 5 đến tuần 10.
-- Không sử dụng deep learning, Spark hoặc cloud nếu pipeline dữ liệu và báo cáo chưa hoàn tất.
-- Không biến `points` thành bài toán classification trong pipeline chính.
-
-## 3. Trạng thái dự án
-
-| Hạng mục | Trạng thái | Ghi chú |
+| Công việc | Mục đích | Đầu ra |
 |---|---|---|
-| Data audit | Đã hoàn thành | Có báo cáo và data dictionary |
-| Cleaning pipeline | Tương đối hoàn chỉnh | Chạy được từ raw tới cleaned data |
-| Missing values | Đã xử lý theo hướng mới | Giữ giá thiếu để không biến giá ước tính thành giá quan sát |
-| Consistency và duplicates | Đã xử lý | Xóa duplicate hoàn toàn; giữ và xuất các trường hợp nghi trùng logic để audit |
-| Outlier và noise | Đã xử lý bước đầu | Giữ phân khúc giá cao; hai lỗi giá đã được hiệu chỉnh có lưu dấu |
-| Automated tests | Đã có bước đầu | Hiện tập trung vào một số quy tắc cleaning quan trọng |
-| EDA và inference | Đã có EDA sơ bộ | Có hai hình, bảng khoảng giá và diễn giải; Spearman dành cho buổi sau |
-| Modeling chính thức | Chưa bắt đầu | Đã chốt split seed 42; chưa huấn luyện hoặc có metric chính thức |
-| Báo cáo tiến trình | Đủ nội dung EDA sơ bộ | Có bảng/hình, câu chuyện dữ liệu và phần split đã kiểm tra |
+| Audit | Hiểu schema, missing, duplicate và miền giá trị | Data dictionary, báo cáo audit |
+| Cleaning | Xử lý thiếu, không nhất quán, trùng và lỗi giá có lưu dấu | Dữ liệu sạch, cleaning log |
+| Chọn mẫu và split | Tách dữ liệu theo nhóm tên rượu | CSV train/validation/test, kiểm tra tái lập |
+| EDA | Mô tả giá, điểm, metadata và review | Notebook, bảng CSV, biểu đồ |
+| Kiểm định — dự kiến | Kiểm tra các giả thuyết định trước | Hệ số, độ lớn khác biệt, khoảng tin cậy và giới hạn |
+| Preprocessing — dự kiến | Mã hóa sản phẩm và vector hóa review | Bộ xử lý fit trên train |
+| Modeling — dự kiến | Học ánh xạ từ đặc trưng kết hợp sang điểm | Pipeline Ridge + preprocessing |
+| Đánh giá — dự kiến | Đo sai số tổng thể và theo nhóm | MAE, RMSE, R², dự đoán và phân tích phần dư |
+| Báo cáo | Kết nối phát hiện với câu hỏi và giới hạn | Báo cáo và phần trình bày có bằng chứng |
 
-Đầu ra cleaning là `data/processed/wine_cleaned_final.csv`, gồm **119.988 dòng và 19 cột**. Có **8.395 dòng thiếu giá** sau loại duplicate; **111.593 dòng** có giá quan sát được, dự kiến đủ điều kiện cho thí nghiệm chính. Dữ liệu raw có 8.996 giá thiếu. Nhóm chưa chạy so sánh mô hình, validation hoặc test chính thức.
+Đợt chỉnh sửa hiện tại hoàn thiện **cấu trúc, EDA và tài liệu**. Chưa triển khai preprocessing cho mô hình, huấn luyện Ridge, kiểm định chính thức hay đánh giá test. Không dùng embedding. Web/API không thuộc đầu ra hiện tại.
 
-`src/train_model.py`, `frontend/` và `services/prediction-service/` là **legacy prototype**: các thành phần này đang giả định target `quality` và 11 thuộc tính hóa lý, nên không được xem là pipeline hoạt động của dự án Wine Reviews 130k.
+## 3. Dữ liệu và vai trò biến
 
-## 4. Dữ liệu
+- Nguồn: [Kaggle — Wine Reviews](https://www.kaggle.com/datasets/zynicide/wine-reviews).
+- Giấy phép theo tài liệu nguồn đã ghi nhận trong dự án: **CC BY-NC-SA 4.0**; cần tuân thủ điều kiện khi chia sẻ/sử dụng.
+- Raw: `data/raw/winemag-data-130k-v2.csv`, **129.971 dòng × 14 cột**.
+- Cleaned: `data/processed/wine_cleaned_final.csv`, **119.988 dòng × 19 cột**.
+- Sau cleaning có **111.593 dòng có giá quan sát**; **8.395 dòng thiếu giá** vẫn được giữ để audit.
+- SHA-256 raw: `52af2643c8ac29f010f0cc629dfbdda1c74aa0f332d11762af9ef3de4e567ac9`.
 
-- Nguồn: [Kaggle — Wine Reviews](https://www.kaggle.com/datasets/zynicide/wine-reviews)
-- File gốc: `data/raw/winemag-data-130k-v2.csv`
-- File sạch: `data/processed/wine_cleaned_final.csv`
-- Giấy phép được công bố trên Kaggle: CC BY-NC-SA 4.0
-- SHA-256 file raw đã audit: `52af2643c8ac29f010f0cc629dfbdda1c74aa0f332d11762af9ef3de4e567ac9`
-
-### Nhóm biến
-
-| Nhóm | Các cột tiêu biểu | Vai trò dự kiến |
+| Biến | Vai trò trong hướng mới | Xử lý dự kiến |
 |---|---|---|
-| Target | `points` | Điểm cần dự đoán |
-| Numerical | `price`, `log_price`, `vintage_year` | Giá dùng `log1p(price)`; năm là metadata |
-| Categorical | `country`, `province`, `region_1`, `region_2`, `variety`, `winery`, `designation` | Metadata; cần xử lý missing và cardinality |
-| Text | `title`, `description` | Dùng cho audit/EDA; chưa đưa vào baseline chính |
-| Reviewer metadata | `taster_name`, `taster_twitter_handle` | Dùng để phân tích bias; không dùng làm feature chính nếu chưa có lập luận hợp lý |
-| Audit fields | `price_original`, `price_was_missing`, `price_was_corrected`, `is_non_informative_review` | Theo dõi quyết định cleaning; không dùng làm predictor |
+| `points` | Nhãn mục tiêu | Hồi quy điểm review, không đưa vào đầu vào |
+| `price` / `log_price` | Giá sản phẩm | Dùng `log1p(price)` với giá quan sát; không dùng đồng thời hai biểu diễn mặc định |
+| `country`, `province`, `variety` | Metadata chính; vùng dùng `province` | Nhãn thiếu và one-hot; nhóm hiếm nếu cần, học trên train |
+| `vintage_year` | Niên vụ trích từ tiêu đề | Điền năm thiếu và chuẩn hóa bằng thống kê train |
+| `description` | Review của người đánh giá rượu | TF-IDF unigram/bigram fit trên train |
+| `title` | Chia nhóm và trích niên vụ | Không dùng nguyên văn làm predictor |
+| `taster_name`, `taster_twitter_handle` | Audit và phân tích bias | Không làm predictor chính |
+| `region_1`, `region_2`, `winery`, `designation` | Dữ liệu bổ trợ | Chưa chọn làm predictor mặc định |
+| `price_original`, `price_was_missing`, `price_was_corrected`, `is_non_informative_review` | Theo dõi xử lý dữ liệu | Không làm predictor |
 
-Định nghĩa đầy đủ của từng cột nằm trong [Data Dictionary](docs/data_dictionary.md). Dữ liệu trong `data/raw/` là bất biến: mọi biến đổi phải được thực hiện bằng code và ghi sang `data/interim/` hoặc `data/processed/`.
+Chi tiết schema raw và cleaned: [Data Dictionary](docs/data_dictionary.md). `description` là lời của người đánh giá trong dataset; không mặc định gọi là review của khách hàng/người dùng.
 
-## 5. Pipeline dự án
+## 4. Quy trình từ đầu đến cuối
 
-```text
-Raw data
-   ↓
-Missing-value handling (giữ price thiếu)
-   ↓
-Consistency normalization
-   ↓
-Exact-duplicate removal
-   ↓
-Outlier/noise audit
-   ↓
-Final validation
-   ↓
-Chọn chai có giá quan sát, chia train/validation/test theo nhóm title
-   ↓
-Feature engineering
-   ↓
-Dummy / chỉ giá / chỉ metadata / kết hợp (cùng mẫu)
-   ↓
-Evaluation, bias analysis and reporting
+```mermaid
+flowchart TD
+    R[Wine Reviews raw] --> A[Audit và cleaning có lưu dấu]
+    A --> D[Dữ liệu sạch]
+    D --> S[Chọn mẫu có giá và points; split theo title]
+    D --> Q[Audit số lượng và missing]
+    S --> E[EDA chi tiết trên train]
+    E --> I[Kiểm định giả thuyết - dự kiến]
+    S --> P[Giá và metadata - preprocessing fit trên train]
+    S --> T[Review - TF-IDF fit trên train]
+    P --> F[Ghép đặc trưng - dự kiến]
+    T --> F
+    F --> M[Ridge; CV theo nhóm trên train - dự kiến]
+    M --> V[Validation; khóa cấu hình - dự kiến]
+    V --> X[Đánh giá test cuối - dự kiến]
+    Q --> B[Báo cáo và diễn giải]
+    I --> B
+    X --> B
 ```
 
-Hiện chỉ có entry point cho cleaning. Các bước từ chia dữ liệu đến kết quả mô hình là kế hoạch trong [lộ trình tuần 5–10](docs/ROADMAP_W5_W10.md), chưa được triển khai.
+### 4.1. Cleaning hiện có
 
-## 6. Cấu trúc repository hiện tại
+Pipeline xử lý missing → consistency → duplicate hoàn toàn → outlier/noise → validation. Giữ giá thiếu, không biến giá ước tính thành quan sát. Hai hiệu chỉnh giá được giữ cùng trường audit; đây là quyết định có lưu vết, không coi là bằng chứng độc lập về giá thị trường. Giá cao hợp lệ và điểm 100 vẫn được giữ. Review ngắn chỉ được gắn cờ, không tự động loại.
+
+### 4.2. Split đã khóa
+
+Mẫu hiện tại là bản ghi có `price` và `points`, chia bằng hai bước `GroupShuffleSplit` theo `title` chuẩn hóa, seed **42**, tỷ lệ nhóm xấp xỉ **70/15/15**:
+
+| Tập | Số bản ghi | Số nhóm title |
+|---|---:|---:|
+| Train | 78.106 | 77.437 |
+| Validation | 16.745 | 16.594 |
+| Test | 16.742 | 16.594 |
+
+Không có nhóm title giao nhau. Module split mới tái tạo trong bộ nhớ và đối chiếu đúng thứ tự bản ghi với file đã lưu; mặc định không ghi dữ liệu. `--write` chỉ tạo file chưa có, từ chối nếu file đã có khác kết quả tái tạo.
+
+**Audit văn bản phát hiện review trùng dù title khác:** train–validation có **6**, train–test **5**, validation–test **1** chuỗi review phân biệt dùng chung sau chuyển chữ thường và gộp khoảng trắng. Các con số là giao theo từng cặp, không phải số dòng hoặc tổng số chuỗi duy nhất toàn cục. Split hiện tại được bảo toàn; nhóm cần thống nhất biện pháp xử lý/đánh giá ảnh hưởng trước thí nghiệm mô hình văn bản. Chưa thể khẳng định không có leakage từ review.
+
+**Lịch sử:** split seed 42 được chốt ngày 21/10/2026; EDA trước đây đã xem toàn mẫu có giá và holdout này từng được thử. Không khẳng định test chưa từng được quan sát; không đổi seed để chọn kết quả thuận lợi.
+
+### 4.3. EDA hiện tại
+
+Audit schema/missing dùng toàn cleaned data. Phân tích giá, điểm, metadata và review dùng **train**. Validation/test chỉ được đọc cột review cho báo cáo trùng văn bản, không phân tích nhãn để chọn cấu hình.
+
+- Phân bố điểm; histogram giá gốc và `log1p(price)` giữ toàn đuôi giá cao.
+- Scatter giá–điểm trên trục log; hiển thị tối đa 15.000 dòng seed 42; bảng dùng toàn train.
+- Bảng khoảng giá theo tứ phân vị tính trên train.
+- Bảng nhóm quốc gia/vùng/giống nho có số mẫu và số giá thiếu; biểu đồ tối đa 10 nhóm đông nhất đạt 100 dòng, bỏ nhãn placeholder khỏi so sánh điểm.
+- Độ dài review và unigram/bigram phổ biến. Đếm tần suất bằng `CountVectorizer` trên train, giữ stopword và từ phủ định. Không phải TF-IDF của mô hình; tần suất không phải mức ảnh hưởng đến điểm.
+
+Kết quả được tạo bằng code, không sửa bằng tay. [Notebook EDA](notebooks/03_eda.ipynb) có nhận xét và giới hạn; [báo cáo EDA](docs/eda_report.md) dẫn tới bảng/hình.
+
+### 4.4. Kiểm định và mô hình dự kiến
+
+Kiểm định chưa chạy: dự kiến dùng Spearman cho liên hệ giá–điểm; so sánh nhóm bằng ANOVA/Welch ANOVA/Kruskal–Wallis tùy giả định. Chọn giả thuyết trước, báo số mẫu, độ lớn kết quả, khoảng tin cậy và điều chỉnh nhiều so sánh khi cần.
+
+Thiết kế mô hình duy nhất:
+
+```text
+Giá + niên vụ ───────────→ Xử lý số ───────────┐
+Quốc gia + vùng + giống ─→ One-hot ────────────┼→ Ghép ma trận → Ridge → Điểm dự đoán
+Review ─────────────────→ TF-IDF 1–2 gram ────┘
+```
+
+Imputer, scaler, encoder, nhóm hiếm và TF-IDF chỉ fit trên train. Chọn tham số bằng CV theo nhóm title trên train; dùng validation để so sánh cấu hình và khóa mô hình. Sau đó mới đánh giá test bằng **MAE chính**, **RMSE và R² phụ**; không tuning theo test. Không dùng F1 cho bài toán điểm liên tục.
+
+Sau khi triển khai, lưu toàn bộ preprocessing + Ridge trong một pipeline; đầu vào dự đoán là thông tin sản phẩm và review, không cần `points`. Các module huấn luyện/đánh giá/dự đoán, model artifact, bảng metric và phân tích sai số sẽ được thêm khi thực sự có chức năng tương ứng; hiện chưa có lệnh chạy modeling.
+
+## 5. Cấu trúc repository
 
 ```text
 wine-quality-prediction/
 ├── data/
-│   ├── raw/                    # Dữ liệu gốc, không chỉnh sửa
-│   ├── interim/                # Kết quả trung gian có thể tái tạo
-│   └── processed/              # Dữ liệu sạch dùng cho phân tích
-├── docs/                       # Audit, data dictionary và tài liệu quản lý
-├── notebooks/                  # Phân tích khám phá có thứ tự thực hiện
-├── src/                        # Code pipeline có thể tái sử dụng
-├── tests/                      # Automated tests
-├── frontend/                   # Legacy prototype, chưa thuộc pipeline chính
-├── services/                   # Legacy prediction service
+│   ├── raw/                      # Nguồn bất biến
+│   ├── interim/                  # Output cleaning trung gian
+│   └── processed/
+│       ├── wine_cleaned_final.csv
+│       └── splits/               # train.csv, val.csv, test.csv
+├── notebooks/
+│   ├── 00_data_understanding.ipynb
+│   ├── 01_outliers_and_noise.ipynb
+│   ├── 02_data_split.ipynb
+│   └── 03_eda.ipynb
+├── src/                          # Cleaning, split, hàm EDA dùng chung
+├── outputs/eda/
+│   ├── figures/                  # PNG xuất từ code
+│   └── tables/                   # CSV mô tả và audit
+├── docs/                         # Audit, cleaning, dictionary, báo cáo
+├── tests/                        # Kiểm tra dữ liệu và logic
 ├── requirements.txt
 └── README.md
 ```
 
-Không chia repository thành thư mục riêng cho Khánh, Đạt, Đô, Dương và Dũng. File được tổ chức theo chức năng; người chịu trách nhiệm được quản lý trong roadmap, issue, branch và pull request. Xem [Project Structure](docs/PROJECT_STRUCTURE.md) để biết cấu trúc mục tiêu và vị trí các artifact sắp được tạo.
+Tổ chức theo chức năng; không có thư mục phần việc cá nhân. [Chi tiết cấu trúc](docs/PROJECT_STRUCTURE.md).
 
-## 7. Cài đặt và chạy lại
+## 6. Cài đặt và chạy lại
 
-Các lệnh dưới đây được chạy từ thư mục gốc của repository.
-
-### Yêu cầu
-
-- Python 3.10 trở lên.
-- Git.
-- Dữ liệu raw đúng tên và checksum nêu ở phần dữ liệu.
-
-### Thiết lập môi trường
+Chạy từ thư mục gốc repository. Yêu cầu Python **3.10 trở lên**, dữ liệu raw đúng tên/checksum. Môi trường hiện có có thể dùng trực tiếp; nếu tạo môi trường mới trên Windows:
 
 ```powershell
-git clone <repository-url>
-cd wine-quality-prediction
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-Trên macOS/Linux, kích hoạt môi trường bằng `source .venv/bin/activate`.
-
-### Chạy cleaning pipeline
+**Bước 1 — Cleaning:** tái tạo dữ liệu trung gian và cleaned data từ raw, kiểm tra schema và checksum; ghi lại các file output cleaning.
 
 ```powershell
 python src/pipeline.py
 ```
 
-Pipeline tạo lại các file trung gian, file cleaned cuối và danh sách các trường hợp nghi trùng logic. Pipeline đồng thời kiểm tra checksum raw, schema, missing values, duplicate, miền `points` và các quyết định xử lý giá.
-
-### Chạy test
+**Bước 2 — Kiểm tra split đã lưu:** không ghi đè các CSV.
 
 ```powershell
-python -m unittest discover -s tests
+python src/split_data.py
 ```
 
-### Mở notebook
+Nếu chưa có split, dùng lệnh sau để tạo theo quy tắc đã khóa; file đã có phải khớp trước khi chấp nhận:
+
+```powershell
+python src/split_data.py --write
+```
+
+**Bước 3 — Tạo EDA và bảng audit trùng review:** ghi bảng/hình vào `outputs/eda/`.
+
+```powershell
+python src/create_eda_plots.py
+```
+
+**Bước 4 — Xem notebook:** chọn kernel `.venv`, Restart Kernel và Run All. Thứ tự: tìm hiểu dữ liệu → audit outlier/noise → kiểm tra split → EDA. Notebook outlier là nghiên cứu quyết định cleaning đã có, không phải bước cleaning riêng cần ghép thêm vào pipeline.
 
 ```powershell
 jupyter notebook
 ```
 
-Mở [notebooks/02_eda.ipynb](notebooks/02_eda.ipynb) để xem bản tổng hợp EDA sơ bộ: bảng bốn khoảng giá của Khánh, hai hình của Đô, bối cảnh/giả thuyết/câu chuyện dữ liệu của Dương đã hiệu chỉnh và phần chuẩn bị baseline của Dũng. Chọn kernel Python trong `.venv`, Restart Kernel và Run All để tạo lại kết quả. Dữ liệu chỉ được nạp một lần; chưa đọc các file split hoặc chạy mô hình/kiểm định.
+**Bước 5 — Kiểm tra tự động:**
 
-Các notebook cá nhân nằm trong `notebooks/w5_progress_parts/` để ghi nhận đóng góp; bản chính của Đô là [03_do_eda_plots.ipynb](notebooks/w5_progress_parts/03_do_eda_plots.ipynb). Bản hiệu chỉnh của [Dương](notebooks/w5_progress_parts/04_duong_story_stats.ipynb) có thống kê tính từ dữ liệu sạch và phân biệt quan sát với giả thuyết. Phần [chọn mẫu/split của Đạt](notebooks/w5_progress_parts/02_dat_data_split.ipynb) đã hoàn thành; Khánh chốt seed 42 ngày 21/10/2026. Spearman trên train và thử mô hình dành cho buổi sau. Các notebook inference và phân tích sai số được làm ở giai đoạn sau; `src/train_model.py` cũ không dùng cho kết quả cuối.
+```powershell
+python -m unittest discover -s tests -v
+```
 
-## 8. Quy ước modeling đã chốt
+Không cần tải dữ liệu từ mạng khi chạy nếu file raw đã có. Không chạy lại bước cài môi trường để thay đổi môi trường đang hoạt động chỉ nhằm tái tạo hình.
 
-- **Bài toán:** regression với target `points`.
-- **Metric chính:** Mean Absolute Error (MAE).
-- **Metric phụ:** Root Mean Squared Error (RMSE) và \(R^2\).
-- **Mẫu so sánh:** chỉ dòng có giá quan sát được; dòng thiếu giá vẫn giữ trong cleaned data để audit.
-- **Split chốt ngày 21/10/2026:** seed **42**, nhóm theo `title` chuẩn hóa; train **78.106**, validation **16.745**, test **16.742** bản ghi, không chồng nhóm. Xem [báo cáo split](docs/data_split_report.md).
-- **Bốn cấu hình:** `DummyRegressor`, Ridge chỉ `log_price`, Ridge chỉ metadata, Ridge kết hợp; cùng mẫu, split và metric.
-- **Metadata chính:** `country`, `province`, `variety`, `vintage_year`. Không dùng nguyên văn review/title, người chấm hay audit fields làm predictor.
-- Imputer, encoder, scaler và mọi bước học từ dữ liệu chỉ được fit trên train.
-- Validation là kết quả sơ bộ; train-only GroupKFold chọn `alpha` từ cùng grid cho ba cấu hình Ridge.
-- Test chỉ đánh giá sau khi model freeze; không tuning theo test. EDA đã xem toàn mẫu và có ghi nhận holdout 42 từng được thử, nên không khẳng định test chưa từng được quan sát.
-- `description`, `title` và thông tin người đánh giá không được đưa vào baseline chính.
+## 7. Kết quả hiện có và trạng thái
 
-## 9. Kết quả
-
-### Kết quả đã xác nhận
-
-- Raw data giữ nguyên và được kiểm tra bằng SHA-256.
-- Cleaning pipeline tạo 119.988 dòng và 19 cột; 8.395 dòng thiếu giá được giữ lại.
-- Không còn duplicate hoàn toàn trên các cột dữ liệu gốc.
-- Điểm tối đa 100 và phân khúc rượu giá cao được giữ lại.
-- Hai lỗi nhập giá đã biết được sửa và đánh dấu bằng audit fields.
-- Các test cleaning hiện có chạy thành công tại thời điểm cập nhật tài liệu.
-
-### Kết quả mô hình chưa có
-
-Nhóm chưa công bố MAE, RMSE hoặc \(R^2\) cho hướng hai tầng. Mọi bảng validation và test trong roadmap là **đầu ra dự kiến**, không phải kết quả hiện có.
-
-## 10. Thành viên và trách nhiệm chính
-
-| Thành viên | Trách nhiệm chính |
+| Hạng mục | Trạng thái |
 |---|---|
-| **Khánh** — nhóm trưởng | Điều phối câu hỏi nghiên cứu, phân tích giá–điểm, chốt và duyệt split, xây baseline hồi quy chính thức, tích hợp kết quả |
-| **Đạt** | Cleaning, chuẩn bị mẫu và triển khai/kiểm soát split, chuẩn bị dữ liệu cùng preprocessing dùng chung cho mô hình |
-| **Đô** | EDA, trực quan hóa và phân tích sai số mô hình |
-| **Dương** | Kể câu chuyện dữ liệu, thống kê và kiểm định, diễn giải kết quả, bias, ethics và giới hạn |
-| **Dũng** | Khảo sát metadata, thử baseline chỉ giá ở giai đoạn tiến trình nếu đủ điều kiện, xây mô hình chỉ metadata và mô hình kết hợp, đánh giá mô hình cuối |
+| Audit, cleaning và validation | Đã có pipeline và báo cáo |
+| Split | Đã có; tái tạo đúng bộ hiện tại, seed 42 |
+| EDA hướng kết hợp | Đã có notebook, bảng và hình trên train |
+| Review trùng giữa split | Đã audit; cần quyết định xử lý trước modeling |
+| Kiểm định chính thức | Chưa thực hiện |
+| TF-IDF + Ridge kết hợp | Thiết kế dự kiến; chưa triển khai/huấn luyện |
+| MAE, RMSE, R² validation/test | Chưa có |
 
-Nhiệm vụ cụ thể và người phụ trách từng giai đoạn được ghi tại [Roadmap tuần 5–10](docs/ROADMAP_W5_W10.md). Cách chọn reviewer, giao đầu ra và review code nằm trong [Team Workflow](docs/TEAM_WORKFLOW.md).
+Các quan sát mô tả trên **78.106 review train**:
 
-## 11. Tài liệu dự án
+- Điểm trung bình **88,42**, độ lệch chuẩn **3,10**, phạm vi **80–100**.
+- Giá trung vị **25 USD**, trung bình **35,66 USD**, tối đa **2.500 USD**.
+- Điểm trung vị theo bốn khoảng giá tăng từ **86** đến **91**; chưa suy ra nhân quả.
+- Review dài trung vị **40 từ**; **29** review dưới 10 từ, không có review trống trên train.
 
-- [Data audit](docs/data_audit.md)
-- [Data dictionary](docs/data_dictionary.md)
-- [Missing-values report](docs/missing_values_report.md)
-- [Consistency và duplicate report](docs/report_dat_consistency_duplicates.md)
-- [Outlier và noise report](docs/outliers_and_noise_report.md)
-- [Roadmap tuần 5–10](docs/ROADMAP_W5_W10.md)
-- [Team workflow](docs/TEAM_WORKFLOW.md)
-- [Project structure](docs/PROJECT_STRUCTURE.md)
+Các số trên là mô tả dữ liệu, không phải kết quả dự đoán hoặc kiểm định.
 
-## 12. Hạn chế, bias và đạo đức
+## 8. Giới hạn và sử dụng kết quả
 
-- `points` phản ánh đánh giá chủ quan và có thể phụ thuộc vào người chấm.
-- Quốc gia, vùng, giống nho, winery và các khoảng giá có phân bố không đồng đều.
-- Tương quan giữa giá và điểm không chứng minh rằng giá cao gây ra chất lượng cao.
-- Dữ liệu chỉ bao phủ các sản phẩm được chọn để review, không đại diện cho toàn bộ thị trường rượu.
-- Không trình bày dự đoán như một thước đo chất lượng khách quan tuyệt đối hoặc khuyến nghị mua hàng chắc chắn.
-- Tên người đánh giá chỉ phục vụ audit/bias analysis, trừ khi nhóm có bằng chứng rõ ràng để sử dụng hợp lệ trong mô hình.
+- Review và điểm đều gắn với người đánh giá. Dự đoán tốt từ review có thể phản ánh cách diễn đạt chứa thông tin về điểm.
+- Mô hình cần review làm đầu vào nên không được mô tả là dự đoán trước khi lời review tồn tại.
+- Mẫu có giá có thể khác nhóm thiếu giá; quốc gia, vùng và giống nho không cân bằng.
+- Dataset chỉ bao phủ sản phẩm được chọn để đánh giá, không đại diện toàn thị trường rượu.
+- Quan hệ giá–điểm không chứng minh giá cao tạo ra chất lượng cao. Không dùng tỷ lệ điểm/giá như khuyến nghị mua hàng chắc chắn.
+- Từ phổ biến hoặc hệ số mô hình về sau không chứng minh quan hệ nhân quả.
+- Trùng văn bản giữa split và lịch sử sử dụng holdout phải được công bố khi đánh giá.
 
-## 13. Khả năng tái lập
+## 9. Tài liệu và khả năng tái lập
 
-- Không chỉnh sửa trực tiếp file raw.
-- Kiểm tra checksum raw trước và sau cleaning.
-- Dùng seed cố định cho split, CV và mô hình có tính ngẫu nhiên.
-- Lưu cấu hình split và metric cùng kết quả thực nghiệm.
-- Notebook phải chạy lại từ đầu không lỗi trước khi merge.
-- Logic dùng chung phải được chuyển từ notebook sang `src/` và có test phù hợp.
-- Mọi kết quả trong báo cáo phải truy ngược được tới code, dữ liệu và artifact đã version hóa.
+- [Data audit](docs/data_audit.md), [Data dictionary](docs/data_dictionary.md).
+- [Missing values](docs/missing_values_report.md), [consistency và duplicate](docs/report_dat_consistency_duplicates.md).
+- [Outlier và noise](docs/outliers_and_noise_report.md), [cleaning log](docs/cleaning_log.csv).
+- [Báo cáo split](docs/data_split_report.md), [báo cáo EDA](docs/eda_report.md).
 
-## 14. Tiến độ
-
-Tuần 5–10 trong [roadmap](docs/ROADMAP_W5_W10.md) là tiến độ thực tế của nhóm, không trùng số tuần in trên slide của học phần 15 tuần. Buổi đánh giá tiến trình thứ Tư tuần 6 dùng một notebook chung, tập trung vào câu hỏi dự án và phân tích khám phá giá–điểm; cleaning chỉ được tóm tắt vì đã báo cáo trước. Split có thể bắt đầu trước buổi đánh giá và hoàn tất ở tuần 6. Kiểm định/hồi quy thử chỉ trình bày nếu đã kiểm tra đúng trên train/validation; kiểm định chính thức ở tuần 8, so sánh bốn mô hình ở tuần 9 và đánh giá test cuối ở tuần 10.
+Raw data bất biến; biến đổi bằng code, không sửa CSV thủ công. Giữ seed và quy tắc chia nhóm, kiểm tra bản ghi và preprocessing, chạy notebook từ kernel mới. Mọi con số trong báo cáo phải truy ngược được tới bảng, hình và code; không ghi kết quả dự kiến như kết quả đã đạt.

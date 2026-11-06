@@ -19,6 +19,43 @@ from src import create_eda_plots as plots
 
 
 class EdaPlotTests(unittest.TestCase):
+    def test_text_counts_keep_negations_and_only_use_train(self):
+        train = pd.DataFrame({
+            "price": [10., 20.], "log_price": np.log1p([10., 20.]),
+            "points": [85, 90], "vintage_year": [2010., np.nan],
+            "description": ["not good wine", "not good"],
+            "country": ["France", "France"], "province": ["A", "B"],
+            "variety": ["Merlot", "Merlot"], "is_non_informative_review": [True, True],
+        })
+        cleaned = pd.concat([train, train.iloc[[0]].assign(description="heldoutsecret", price=np.nan)], ignore_index=True)
+        before = train.copy(deep=True)
+        tables = plots.build_eda_tables(cleaned, train)
+        pd.testing.assert_frame_equal(before, train)
+        self.assertNotIn("heldoutsecret", set(tables["unigrams"]["term"]))
+        self.assertIn("not", set(tables["unigrams"]["term"]))
+        bigrams = tables["bigrams"].set_index("term")
+        self.assertEqual(bigrams.loc["not good", "occurrences"], 2)
+        self.assertEqual(tables["audit_missing"].set_index("column").loc["price", "missing"], 1)
+
+    def test_metadata_comparison_excludes_small_and_placeholder_groups(self):
+        frame = pd.DataFrame({"country": ["Unknown"] * 200 + ["A"] * 110 + ["B"] * 99})
+        self.assertEqual(plots.metadata_groups(frame, "country"), ["A"])
+
+    def test_heldout_labels_are_not_loaded_by_eda(self):
+        cleaned = pd.DataFrame({"description": ["training"], "points": [88]})
+        heldout_reads = []
+        def read_csv(path, **kwargs):
+            if Path(path).stem in ("val", "test"):
+                heldout_reads.append(kwargs.get("usecols"))
+                return pd.DataFrame({"description": ["holdout"]})
+            return cleaned
+        with patch.object(Path, "mkdir"), patch.object(pd.DataFrame, "to_csv"), \
+                patch.object(pd, "read_csv", side_effect=read_csv), \
+                patch.object(plots, "build_eda_tables", return_value={}), \
+                patch.object(plots, "create_eda_figures", return_value={}):
+            plots.run_eda("unused_output")
+        self.assertEqual(heldout_reads, [["description"], ["description"]])
+
     def tearDown(self):
         plt.close("all")
 

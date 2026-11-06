@@ -1,6 +1,7 @@
 from collections import Counter
 from itertools import combinations
 from pathlib import Path
+import sys
 import unittest
 
 import numpy as np
@@ -8,6 +9,8 @@ import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from src.split_data import create_splits, check_existing_splits, review_overlap
 
 
 class SplitArtifactTests(unittest.TestCase):
@@ -67,6 +70,20 @@ class SplitArtifactTests(unittest.TestCase):
             rtol=1e-12,
             atol=1e-12,
         )
+
+    def test_shared_module_reproduces_every_locked_record_in_order(self):
+        parts = create_splits(self.source)
+        check_existing_splits(parts)
+        self.assertEqual({name: len(part) for name, part in parts.items()},
+                         {"train": 78106, "val": 16745, "test": 16742})
+
+    def test_review_overlap_ignores_empty_text_and_normalizes_whitespace(self):
+        parts = {
+            "train": pd.DataFrame({"description": [" Good   Wine ", "", None]}),
+            "val": pd.DataFrame({"description": ["good wine", "GOOD WINE", " "]}),
+            "test": pd.DataFrame({"description": ["different", ""]}),
+        }
+        self.assertEqual(review_overlap(parts)["shared_unique_reviews"].tolist(), [1, 0, 0])
 
 
 if __name__ == "__main__":

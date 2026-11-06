@@ -3,9 +3,9 @@ numpy
 scikit-learn
 matplotlib
 seaborn
-imbalanced-learn
 jupyter
-requests
-beautifulsoup4
 scipy
 statsmodels
+nbformat
+nbclient
+ipykernel

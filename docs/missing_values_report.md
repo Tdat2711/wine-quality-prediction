@@ -1,4 +1,4 @@
-# Báo cáo xử lý missing values — phiên bản thí nghiệm hai tầng
+# Báo cáo xử lý missing values
 
 ## Phạm vi
 
@@ -12,7 +12,7 @@
 
 1. Giữ nguyên 129.971 dòng và thứ tự 14 cột.
 2. Không học ánh xạ giữa các dòng trước khi chia train/validation/test; trường thiếu được gắn nhãn rõ nghĩa.
-3. Giữ nguyên `price` thiếu. Thí nghiệm chính dùng cùng mẫu có giá quan sát ở cả bốn cấu hình; không biến giá ước tính thành giá thật.
+3. Giữ nguyên `price` thiếu. Hướng mô hình kết hợp dự kiến dùng mẫu có giá quan sát; không biến giá ước tính thành giá thật.
 4. Các phép suy luận từ một dòng riêng lẻ có bằng chứng trực tiếp (một `variety` từ `description`) vẫn được lưu dấu.
 5. Phân biệt `Not applicable` và `Unknown` ở `region_2`.
 
@@ -34,7 +34,7 @@
 
 - Kích thước vẫn là **129.971 dòng × 14 cột**.
 - Chỉ còn **8.996 giá thiếu** ở bước này; sau loại duplicate còn **8.395** trên 119.988 dòng.
-- Mẫu so sánh có giá quan sát gồm **111.593 dòng**; bốn cấu hình mô hình dùng đúng mẫu này.
+- Mẫu có giá quan sát gồm **111.593 dòng**, là mẫu của bộ split hiện tại cho hướng kết hợp thông tin sản phẩm và review.
 - Không có cột nào ngoài 9 cột được giao bị thay đổi.
 - Các giá trị `price` đã có sẵn, gồm giá trị cao nhất 3.300 USD, được giữ nguyên để
   nhóm phụ trách outlier đánh giá riêng.
