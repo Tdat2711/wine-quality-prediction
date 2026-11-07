@@ -1,0 +1,11 @@
+{
+  "source": "../data/processed/wine_cleaned_final.csv",
+  "output": "outputs",
+  "seed": 42,
+  "test_fraction": 0.15,
+  "validation_fraction": 0.15,
+  "category_min_frequency": 20,
+  "category_max_categories": 256,
+  "description_max_features": 3000,
+  "title_max_features": 1000
+}
