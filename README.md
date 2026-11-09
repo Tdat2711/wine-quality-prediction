@@ -1,6 +1,6 @@
 # Phân tích và dự đoán điểm review rượu từ thông tin sản phẩm và văn bản
 
-Dự án sử dụng **Wine Reviews 130k** để tìm hiểu quan hệ giữa giá, đặc điểm sản phẩm, nội dung đánh giá và điểm review `points`. Hướng mô hình dự kiến là **kết hợp thông tin sản phẩm đã mã hóa với vector TF-IDF của review, rồi dùng Ridge để dự đoán điểm**.
+Dự án sử dụng **Wine Reviews 130k** để tìm hiểu quan hệ giữa giá, đặc điểm sản phẩm, nội dung đánh giá và điểm review `points`. Mô hình chính là **kết hợp thông tin sản phẩm đã mã hóa với vector TF-IDF của review, rồi dùng Ridge để dự đoán điểm**.
 
 Đơn vị quan sát là **một bản ghi review**, không mặc định là một chai rượu duy nhất. Một tên rượu có thể có nhiều review. `points` là đánh giá của người chấm, không phải phép đo chất lượng khách quan.
 
@@ -28,12 +28,12 @@ Một mô hình kết hợp duy nhất **chưa chứng minh review cải thiện
 | Chọn mẫu và split | Tách dữ liệu theo nhóm tên rượu | CSV train/validation/test, kiểm tra tái lập |
 | EDA | Mô tả giá, điểm, metadata và review | Notebook, bảng CSV, biểu đồ |
 | Kiểm định — dự kiến | Kiểm tra các giả thuyết định trước | Hệ số, độ lớn khác biệt, khoảng tin cậy và giới hạn |
-| Preprocessing — dự kiến | Mã hóa sản phẩm và vector hóa review | Bộ xử lý fit trên train |
-| Modeling — dự kiến | Học ánh xạ từ đặc trưng kết hợp sang điểm | Pipeline Ridge + preprocessing |
-| Đánh giá — dự kiến | Đo sai số tổng thể và theo nhóm | MAE, RMSE, R², dự đoán và phân tích phần dư |
+| Preprocessing | Mã hóa sản phẩm và vector hóa review | Bộ xử lý fit trên train |
+| Modeling | Học ánh xạ từ đặc trưng kết hợp sang điểm | Pipeline Ridge + preprocessing |
+| Đánh giá validation | Đo sai số tổng thể và theo nhóm | MAE, RMSE, R², dự đoán và phân tích phần dư |
 | Báo cáo | Kết nối phát hiện với câu hỏi và giới hạn | Báo cáo và phần trình bày có bằng chứng |
 
-Đợt chỉnh sửa hiện tại hoàn thiện **cấu trúc, EDA và tài liệu**. Chưa triển khai preprocessing cho mô hình, huấn luyện Ridge, kiểm định chính thức hay đánh giá test. Không dùng embedding. Web/API không thuộc đầu ra hiện tại.
+Đã triển khai pipeline **metadata + TF-IDF review → Ridge**, chọn alpha bằng CV theo nhóm trên train và báo cáo validation. Chưa đánh giá test trong luồng này và chưa chạy kiểm định chính thức. Không dùng embedding; web/API không thuộc đầu ra hiện tại.
 
 ## 3. Dữ liệu và vai trò biến
 
@@ -44,7 +44,7 @@ Một mô hình kết hợp duy nhất **chưa chứng minh review cải thiện
 - Sau cleaning có **111.593 dòng có giá quan sát**; **8.395 dòng thiếu giá** vẫn được giữ để audit.
 - SHA-256 raw: `52af2643c8ac29f010f0cc629dfbdda1c74aa0f332d11762af9ef3de4e567ac9`.
 
-| Biến | Vai trò trong hướng mới | Xử lý dự kiến |
+| Biến | Vai trò trong mô hình | Xử lý |
 |---|---|---|
 | `points` | Nhãn mục tiêu | Hồi quy điểm review, không đưa vào đầu vào |
 | `price` / `log_price` | Giá sản phẩm | Dùng `log1p(price)` với giá quan sát; không dùng đồng thời hai biểu diễn mặc định |
@@ -70,10 +70,10 @@ flowchart TD
     E --> I[Kiểm định giả thuyết - dự kiến]
     S --> P[Giá và metadata - preprocessing fit trên train]
     S --> T[Review - TF-IDF fit trên train]
-    P --> F[Ghép đặc trưng - dự kiến]
+    P --> F[Ghép đặc trưng]
     T --> F
-    F --> M[Ridge; CV theo nhóm trên train - dự kiến]
-    M --> V[Validation; khóa cấu hình - dự kiến]
+    F --> M[Ridge; CV theo nhóm trên train]
+    M --> V[Validation; báo cáo mô hình đã khóa bằng CV]
     V --> X[Đánh giá test cuối - dự kiến]
     Q --> B[Báo cáo và diễn giải]
     I --> B
@@ -96,7 +96,7 @@ Mẫu hiện tại là bản ghi có `price` và `points`, chia bằng hai bư�
 
 Không có nhóm title giao nhau. Module split mới tái tạo trong bộ nhớ và đối chiếu đúng thứ tự bản ghi với file đã lưu; mặc định không ghi dữ liệu. `--write` chỉ tạo file chưa có, từ chối nếu file đã có khác kết quả tái tạo.
 
-**Audit văn bản phát hiện review trùng dù title khác:** train–validation có **6**, train–test **5**, validation–test **1** chuỗi review phân biệt dùng chung sau chuyển chữ thường và gộp khoảng trắng. Các con số là giao theo từng cặp, không phải số dòng hoặc tổng số chuỗi duy nhất toàn cục. Split hiện tại được bảo toàn; nhóm cần thống nhất biện pháp xử lý/đánh giá ảnh hưởng trước thí nghiệm mô hình văn bản. Chưa thể khẳng định không có leakage từ review.
+**Audit văn bản phát hiện review trùng dù title khác:** train–validation có **6**, train–test **5**, validation–test **1** chuỗi review phân biệt dùng chung sau chuyển chữ thường và gộp khoảng trắng. Các con số là giao theo từng cặp, không phải số dòng hoặc tổng số chuỗi duy nhất toàn cục. Giữ nguyên split và mọi bản ghi. Báo cáo mô hình có metric validation tổng thể và metric riêng sau khi bỏ khỏi phép tính các dòng có review trùng train (6 dòng); không dùng hai kết quả để tuning. Đây là audit trùng chính xác sau chuẩn hóa, chưa xử lý near-duplicate và không chứng minh không có leakage.
 
 **Lịch sử:** split seed 42 được chốt ngày 21/10/2026; EDA trước đây đã xem toàn mẫu có giá và holdout này từng được thử. Không khẳng định test chưa từng được quan sát; không đổi seed để chọn kết quả thuận lợi.
 
@@ -112,21 +112,22 @@ Audit schema/missing dùng toàn cleaned data. Phân tích giá, điểm, metada
 
 Kết quả được tạo bằng code, không sửa bằng tay. [Notebook EDA](notebooks/03_eda.ipynb) có nhận xét và giới hạn; [báo cáo EDA](docs/eda_report.md) dẫn tới bảng/hình.
 
-### 4.4. Kiểm định và mô hình dự kiến
+### 4.4. Mô hình kết hợp và kiểm định
 
-Kiểm định chưa chạy: dự kiến dùng Spearman cho liên hệ giá–điểm; so sánh nhóm bằng ANOVA/Welch ANOVA/Kruskal–Wallis tùy giả định. Chọn giả thuyết trước, báo số mẫu, độ lớn kết quả, khoảng tin cậy và điều chỉnh nhiều so sánh khi cần.
+Pipeline mặc định nhận `price`, `vintage_year`, `country`, `province`, `variety`, `description` và dự đoán `points`:
 
-Thiết kế mô hình duy nhất:
+- Giá được tính `log1p` ngay trong pipeline; giá và niên vụ được điền trung vị rồi chuẩn hóa.
+- Quốc gia, tỉnh/vùng (`province`), giống nho được one-hot, nhóm hiếm học từ train.
+- Review được TF-IDF 1–2 gram, `min_df=2`, tối đa 3.000 feature; giữ stopword và từ phủ định.
+- Không dùng title, danh tính người chấm, cột audit hay đồng thời giá gốc và log giá làm predictor.
 
-```text
-Giá + niên vụ ───────────→ Xử lý số ───────────┐
-Quốc gia + vùng + giống ─→ One-hot ────────────┼→ Ghép ma trận → Ridge → Điểm dự đoán
-Review ─────────────────→ TF-IDF 1–2 gram ────┘
-```
+Chọn alpha `[0.1, 1, 10, 100, 1000]` bằng CV 5 fold trên train; nối các dòng có chung title chuẩn hóa hoặc review chuẩn hóa không rỗng thành nhóm, kể cả quan hệ bắc cầu. Mỗi fold fit preprocessing độc lập. Chọn MAE trung bình nhỏ nhất, hòa thì RMSE rồi alpha nhỏ hơn. Fit pipeline cuối trên train, so với baseline trung bình train và báo validation; không fit lại bằng train + validation.
 
-Imputer, scaler, encoder, nhóm hiếm và TF-IDF chỉ fit trên train. Chọn tham số bằng CV theo nhóm title trên train; dùng validation để so sánh cấu hình và khóa mô hình. Sau đó mới đánh giá test bằng **MAE chính**, **RMSE và R² phụ**; không tuning theo test. Không dùng F1 cho bài toán điểm liên tục.
+Báo MAE chính, RMSE và R² phụ, sai số theo nhóm và số mẫu. Validation có cả kết quả tổng thể lẫn tập không trùng review với train. Không làm tròn/cắt điểm trước khi tính metric. Chưa đánh giá test; lệnh đánh giá test riêng chỉ dùng sau khi đã khóa mô hình, không tuning theo kết quả test.
 
-Sau khi triển khai, lưu toàn bộ preprocessing + Ridge trong một pipeline; đầu vào dự đoán là thông tin sản phẩm và review, không cần `points`. Các module huấn luyện/đánh giá/dự đoán, model artifact, bảng metric và phân tích sai số sẽ được thêm khi thực sự có chức năng tương ứng; hiện chưa có lệnh chạy modeling.
+Lưu toàn bộ chuẩn bị đầu vào, preprocessing và Ridge trong một pipeline. Suy luận cần review đã tồn tại, không cần `points`. Đây là ước lượng điểm review, không phải dự đoán chất lượng trước khi có review. Không có thí nghiệm đối chứng để kết luận mức cải thiện do thêm review.
+
+Kiểm định thống kê chính thức chưa chạy; các giả thuyết và phương pháp phải được chốt riêng trước khi phân tích.
 
 ## 5. Cấu trúc repository
 
@@ -150,6 +151,7 @@ wine-quality-prediction/
 ├── docs/                         # Audit, cleaning, dictionary, báo cáo
 ├── tests/                        # Kiểm tra dữ liệu và logic
 ├── requirements.txt
+├── wine_encoding/               # Encoding, combined pipeline, CV/train/verify/predict
 └── README.md
 ```
 
@@ -203,6 +205,18 @@ python -m unittest discover -s tests -v
 
 Không cần tải dữ liệu từ mạng khi chạy nếu file raw đã có. Không chạy lại bước cài môi trường để thay đổi môi trường đang hoạt động chỉ nhằm tái tạo hình.
 
+**Bước 6 — Encoding và mô hình kết hợp:**
+
+```powershell
+python -m wine_encoding.src.prepare
+python -m wine_encoding.src.verify
+python -m wine_encoding.src.train
+python -m wine_encoding.src.verify_model
+python -m wine_encoding.src.predict --input wine_encoding/examples/new_wines.csv
+```
+
+Chạy từ repo root. Prepare đối chiếu split đã khóa trước khi xuất; train CV từ dữ liệu chưa mã hóa. Model mới ở `wine_encoding/outputs/model_combined/`, không dùng artifact product cũ thay thế. Xem [hướng dẫn mô hình](wine_encoding/README.md) để biết input, output và lệnh đánh giá test tách riêng.
+
 ## 7. Kết quả hiện có và trạng thái
 
 | Hạng mục | Trạng thái |
@@ -210,10 +224,10 @@ Không cần tải dữ liệu từ mạng khi chạy nếu file raw đã có. K
 | Audit, cleaning và validation | Đã có pipeline và báo cáo |
 | Split | Đã có; tái tạo đúng bộ hiện tại, seed 42 |
 | EDA hướng kết hợp | Đã có notebook, bảng và hình trên train |
-| Review trùng giữa split | Đã audit; cần quyết định xử lý trước modeling |
+| Review trùng giữa split | Giữ split; báo metric validation tổng thể và không trùng train |
 | Kiểm định chính thức | Chưa thực hiện |
-| TF-IDF + Ridge kết hợp | Thiết kế dự kiến; chưa triển khai/huấn luyện |
-| MAE, RMSE, R² validation/test | Chưa có |
+| TF-IDF + Ridge kết hợp | Đã triển khai CV theo nhóm, pipeline train và suy luận |
+| MAE, RMSE, R² | Báo cáo validation được tạo bằng train; test chưa đánh giá |
 
 Các quan sát mô tả trên **78.106 review train**:
 
@@ -222,7 +236,7 @@ Các quan sát mô tả trên **78.106 review train**:
 - Điểm trung vị theo bốn khoảng giá tăng từ **86** đến **91**; chưa suy ra nhân quả.
 - Review dài trung vị **40 từ**; **29** review dưới 10 từ, không có review trống trên train.
 
-Các số trên là mô tả dữ liệu, không phải kết quả dự đoán hoặc kiểm định.
+Các số EDA trên là mô tả dữ liệu. Kết quả dự đoán được tạo riêng tại `wine_encoding/outputs/model_combined/RESULTS.md`; xem [báo cáo validation đã kiểm chứng](docs/model_validation_report.md). Kết quả này không thay thế kiểm định thống kê.
 
 ## 8. Giới hạn và sử dụng kết quả
 
@@ -231,7 +245,7 @@ Các số trên là mô tả dữ liệu, không phải kết quả dự đoán 
 - Mẫu có giá có thể khác nhóm thiếu giá; quốc gia, vùng và giống nho không cân bằng.
 - Dataset chỉ bao phủ sản phẩm được chọn để đánh giá, không đại diện toàn thị trường rượu.
 - Quan hệ giá–điểm không chứng minh giá cao tạo ra chất lượng cao. Không dùng tỷ lệ điểm/giá như khuyến nghị mua hàng chắc chắn.
-- Từ phổ biến hoặc hệ số mô hình về sau không chứng minh quan hệ nhân quả.
+- Từ phổ biến hoặc hệ số mô hình không chứng minh quan hệ nhân quả.
 - Trùng văn bản giữa split và lịch sử sử dụng holdout phải được công bố khi đánh giá.
 
 ## 9. Tài liệu và khả năng tái lập

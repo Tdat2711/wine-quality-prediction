@@ -15,8 +15,8 @@ Repository tổ chức theo chức năng, dùng chung một pipeline cleaning, m
 | `outputs/eda/tables/` | Bảng mô tả và audit CSV |
 | `docs/` | Audit, dictionary, quyết định cleaning, báo cáo split và EDA |
 | `tests/` | Kiểm tra cleaning, split, lựa chọn mẫu, EDA và encoding |
-| `wine_encoding/` | Module tiền xử lý, số hóa dữ liệu (product/review/all), huấn luyện baseline + Ridge, đánh giá và suy luận |
-| `wine_encoding/outputs/` | Artifact tiền xử lý (`encoder.joblib`), ma trận đặc trưng `X_*.npz`, model `ridge_product.joblib`, báo cáo đánh giá |
+| `wine_encoding/` | Module tiền xử lý, số hóa dữ liệu (combined và ba bộ đối chiếu), huấn luyện baseline + Ridge, đánh giá và suy luận |
+| `wine_encoding/outputs/` | Artifact tiền xử lý (`encoder.joblib`), ma trận đặc trưng `X_*.npz`, model `model_combined/ridge_combined.joblib`, báo cáo đánh giá |
 
 ## Luồng chạy hiện có
 
@@ -31,19 +31,24 @@ Logic split đã được chuyển từ notebook phần việc sang module chung
 
 ## Module tiền xử lý và mô hình hóa (`wine_encoding`)
 
-Đã tích hợp module `wine_encoding` chuẩn hóa 19 thuộc tính theo thiết kế:
-- **Tiền xử lý số**: Giá, niên vụ, log_price được điền trung vị train + chuẩn hóa thang đo (StandardScaler) kèm cờ thiếu ổn định.
-- **Biến phân loại**: One-hot encoder với gom nhóm tần suất thấp (`category_min_frequency=20`, tối đa 256 nhóm/cột).
-- **Văn bản**: TF-IDF unigram/bigram cho description (tối đa 3.000 features) và title (tối đa 1.000 features).
-- **Bộ đặc trưng đa tầng**:
-  - `product`: thông tin sản phẩm (giá, vùng, giống nho, winery, vintage).
-  - `review`: bổ sung thêm mô tả cảm quan và người đánh giá.
-  - `all_attributes_audit`: số hóa toàn bộ để đối chiếu audit.
-- **Chống rò rỉ (Zero Leakage)**: Mọi scaler, imputer, vocabulary và nhóm hiếm chỉ fit trên tập train; validation/test chỉ transform.
-- **Mô hình**: Baseline (DummyRegressor) + Ridge Regression chọn siêu tham số alpha tốt nhất trên tập validation.
-- **Cách chạy**:
-  - Kiểm tra tính toàn vẹn: `python -m wine_encoding.src.verify` và `python -m wine_encoding.src.verify_model`
-  - Huấn luyện / Tái sinh ma trận: `python -m wine_encoding.src.prepare` và `python -m wine_encoding.src.train`
-  - Dự đoán dữ liệu mới: `python -m wine_encoding.src.predict --input wine_encoding/examples/new_wines.csv`
+Module mặc định dùng **log1p(price), vintage_year, country, province, variety và description TF-IDF → Ridge**. Không dùng title, danh tính người chấm hoặc cột audit làm predictor chính. Một pipeline lưu toàn bộ chuẩn bị input, preprocessing và Ridge; model ở `wine_encoding/outputs/model_combined/ridge_combined.joblib`.
 
-Giữ lịch sử holdout và báo cáo review trùng. Không thay split hoặc tuning theo test để chọn kết quả thuận lợi. Không sửa dữ liệu raw hoặc chép bản dữ liệu/model riêng theo người thực hiện.
+- Prepare đối chiếu split đã khóa và thứ tự dòng qua module chung; chỉ mã hóa 111.593 dòng đủ điều kiện, không ghi dữ liệu/split gốc.
+- CV 5 fold trên train nối nhóm cùng title hoặc review không rỗng; fit preprocessing riêng từng fold. Chọn alpha bằng MAE CV, hòa thì RMSE rồi alpha nhỏ hơn.
+- Fit model cuối trên train; báo validation tổng thể và riêng phần không trùng review train. Baseline là trung bình train. Không đánh giá test trong luồng train.
+- Giữ ba profile encoding cũ để đối chiếu; model chính dùng profile combined độc lập.
+- Tests tự tạo fixture/artifact tạm, không cần chuẩn bị model thật trước.
+
+Chạy từ repo root:
+
+```powershell
+python -m wine_encoding.src.prepare
+python -m wine_encoding.src.verify
+python -m wine_encoding.src.train
+python -m wine_encoding.src.verify_model
+python -m wine_encoding.src.predict --input wine_encoding/examples/new_wines.csv
+```
+
+Đường dẫn config tính từ file config; đường dẫn CLI tính từ thư mục chạy. Sai input báo lỗi. Artifact schema v2 có checksum nguồn/split; model product cũ không tự thay thế combined. Xem [hướng dẫn đầy đủ](../wine_encoding/README.md).
+
+Giữ mọi dòng trong split và lịch sử holdout từng được quan sát. Báo ảnh hưởng review trùng, chưa kiểm tra near-duplicate; không tuyên bố zero leakage. Lệnh `evaluate_test` tách riêng chỉ dùng sau khi khóa mô hình, chưa chạy trong đợt này. Không sửa raw/cleaned hoặc đổi seed để chọn kết quả thuận lợi.

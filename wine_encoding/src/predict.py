@@ -1,46 +1,46 @@
-"""Predict product points from a raw CSV using saved training transformations."""
+"""Predict from six raw metadata/review columns using the saved complete pipeline."""
 import argparse
 from pathlib import Path
 import joblib
 import numpy as np
-import pandas as pd
-from scipy import sparse
-from .transform import prepare_new_frame
+from .data import ROOT, SCHEMA_VERSION
 from .encoding import read_source_csv
 
 
-def main():
-    module_root = Path(__file__).resolve().parents[1]
-    default_model = str(module_root / 'outputs' / 'model_product' / 'ridge_product.joblib')
-    default_output = str(module_root / 'outputs' / 'model_product' / 'new_predictions.csv')
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input', required=True)
-    parser.add_argument('--model', default=default_model)
-    parser.add_argument('--output', default=default_output)
-    args = parser.parse_args()
-    model_path = Path(args.model)
-    if not model_path.is_file() and (module_root / args.model).is_file():
-        model_path = module_root / args.model
-    bundle = joblib.load(model_path)
-    raw = read_source_csv(args.input, relative_to=module_root)
-    normalized = prepare_new_frame(raw, bundle['profile'])
-    x = sparse.csr_matrix(bundle['preprocessor'].transform(normalized), dtype=np.float64)
-    x = x[:, bundle['feature_indices']]
-    if x.shape[1] != len(bundle['feature_names']):
-        raise ValueError('Feature mismatch')
-    pred = bundle['model'].predict(x)
+def load_model(path):
+    bundle = joblib.load(path)
+    if bundle.get('schema_version') != SCHEMA_VERSION or bundle.get('profile') != 'combined':
+        raise ValueError('Expected a version-2 combined model; rerun train')
+    return bundle
+
+
+def predict(input_path, model_path=ROOT / 'outputs/model_combined/ridge_combined.joblib',
+            output_path=ROOT / 'outputs/model_combined/new_predictions.csv'):
+    raw = read_source_csv(input_path)
+    if 'points_predicted' in raw:
+        raise ValueError('Input already contains points_predicted')
+    bundle = load_model(model_path)
+    pred = bundle['pipeline'].predict(raw)
     if not np.isfinite(pred).all():
         raise ValueError('Non-finite predictions')
-    if 'points_predicted' in raw:
-        raise ValueError('Input already contains points_predicted; choose a raw input file')
-    raw['points_predicted'] = pred
+    result = raw.copy()
+    result['points_predicted'] = pred
     lo, hi = bundle['train_target_range']
-    raw['prediction_outside_train_target_range'] = (pred < lo) | (pred > hi)
-    out = Path(args.output)
+    result['prediction_outside_train_target_range'] = (pred < lo) | (pred > hi)
+    out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
-    raw.to_csv(out, index=False, encoding='utf-8-sig')
-    print(f'Saved {len(raw)} predictions to {out}; no fit/refit.')
-    print(raw.head(10).to_string(index=False))
+    result.to_csv(out, index=False, encoding='utf-8-sig')
+    return result
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--input', required=True)
+    parser.add_argument('--model', default=str(ROOT / 'outputs/model_combined/ridge_combined.joblib'))
+    parser.add_argument('--output', default=str(ROOT / 'outputs/model_combined/new_predictions.csv'))
+    args = parser.parse_args()
+    result = predict(args.input, args.model, args.output)
+    print(result.head(10).to_string(index=False))
 
 
 if __name__ == '__main__':

@@ -37,7 +37,7 @@ Xu hướng giữa các khoảng giá không chứng minh nhân quả. Khác bi�
 
 Review trùng chuẩn hóa giữa train–validation là 6 chuỗi, train–test 5, validation–test 1; cần thống nhất xử lý trước modeling. Không thay split trong EDA. EDA trước đây đã xem toàn mẫu và holdout seed 42 từng được thử; giữ lịch sử này khi diễn giải test về sau.
 
-Bước tiếp theo là kiểm định theo giả thuyết đã chốt và triển khai mô hình kết hợp: metadata + TF-IDF → Ridge. Preprocessing chỉ fit trên train; CV theo nhóm, validation để chốt cấu hình và test đánh giá cuối. Hiện chưa có MAE/RMSE/R² hay bằng chứng lợi ích dự đoán tăng thêm của review.
+Báo cáo EDA này không tính metric dự đoán hoặc kiểm định thống kê. Module mô hình kết hợp metadata + TF-IDF → Ridge đã được triển khai riêng trong `wine_encoding`: preprocessing fit trong từng fold train, chọn alpha bằng CV theo nhóm và báo cáo validation; test chưa đánh giá. Xem [hướng dẫn mô hình](../wine_encoding/README.md) và báo cáo được sinh trong `wine_encoding/outputs/model_combined/`. Chưa có thí nghiệm đối chứng để chứng minh lợi ích dự đoán tăng thêm của review; kiểm định theo giả thuyết đã chốt vẫn là công việc riêng.
 
 ## Chạy lại
 

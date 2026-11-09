@@ -22,40 +22,13 @@ REVIEW = PRODUCT + ['description', 'taster_name', 'is_non_informative_review']
 
 def resolve_source_path(path_or_str, relative_to=None) -> Path:
     """Resolve source CSV path reliably across working directories and environments."""
-    if isinstance(path_or_str, Path):
-        p = path_or_str
-    else:
-        p = Path(str(path_or_str).strip())
-
-    if p.is_file():
-        return p.resolve()
-
-    if relative_to is not None:
-        cand = (Path(relative_to) / p).resolve()
-        if cand.is_file():
-            return cand
-
-    module_dir = Path(__file__).resolve().parents[1]
-    repo_root = module_dir.parent
-
-    candidates = [
-        Path.cwd() / p,
-        module_dir / p,
-        repo_root / p,
-        repo_root / "data" / "processed" / "wine_cleaned_final.csv",
-        module_dir / ".." / "data" / "processed" / "wine_cleaned_final.csv",
-        Path.cwd() / "data" / "processed" / "wine_cleaned_final.csv",
-        Path.cwd() / ".." / "data" / "processed" / "wine_cleaned_final.csv",
-        Path.cwd() / "wine-quality-prediction" / "data" / "processed" / "wine_cleaned_final.csv",
-    ]
-    for cand in candidates:
-        try:
-            cand_res = cand.resolve()
-            if cand_res.is_file():
-                return cand_res
-        except Exception:
-            pass
-    return p.resolve()
+    p = Path(path_or_str)
+    if not p.is_absolute():
+        p = (Path(relative_to) if relative_to is not None else Path.cwd()) / p
+    p = p.resolve()
+    if not p.is_file():
+        raise FileNotFoundError(f'CSV file not found: {p}')
+    return p
 
 
 def read_source_csv(path, relative_to=None):
@@ -89,7 +62,7 @@ def normalize(frame):
         out.loc[out[col].eq(''), col] = '__MISSING__'
     for col in TEXT:
         out[col] = out[col].fillna('').astype(str)
-    mapping = {'true': 1.0, 'false': 0.0, '1': 1.0, '0': 0.0}
+    mapping = {'true': 1.0, 'false': 0.0, '1': 1.0, '0': 0.0, '1.0': 1.0, '0.0': 0.0}
     for col in FLAGS:
         values = out[col].astype(str).str.strip().str.lower().map(mapping)
         if values.isna().any():

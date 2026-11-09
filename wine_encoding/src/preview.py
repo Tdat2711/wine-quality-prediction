@@ -34,6 +34,13 @@ def main():
         print(f'{profile}: 100 rows, {x.shape[1]} numeric features, plus target and row ID')
     rows.insert(0, 'source_row_id', ids)
     rows.to_csv(dest / 'original_100_rows.csv', index=False, encoding='utf-8-sig')
+    combined = sparse.csr_matrix(bundle['combined'].transform(rows))
+    saved_combined = sparse.load_npz(output / 'combined/X_train.npz')[:len(ids)]
+    delta = combined - saved_combined
+    assert not delta.nnz or np.max(np.abs(delta.data)) < 1e-6
+    combined_names = bundle['combined'].named_steps['features'].get_feature_names_out()
+    pd.DataFrame(combined.toarray(), columns=combined_names).to_csv(
+        dest / 'combined_100_rows.csv', index=False, encoding='utf-8-sig')
     name_index = {name: idx for idx, name in enumerate(names)}
     wanted = ['price__price', 'vintage_year__vintage_year',
               'country__country_Italy', 'country__country_Portugal',

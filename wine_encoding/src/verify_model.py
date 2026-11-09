@@ -1,49 +1,61 @@
-"""Verify saved model against validation predictions and raw-data inference."""
+"""Verify combined pipeline, CV grouping/selection and validation metrics."""
+import argparse
 import json
 from pathlib import Path
-import joblib
 import numpy as np
 import pandas as pd
-from scipy import sparse
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from .encoding import read_source_csv
-from .transform import prepare_new_frame
+from .cv import connected_groups, metrics
+from .data import ROOT, load_report, read_part, normalized_reviews, review_matches
+from .predict import load_model
+
+
+def verify_model(data_dir=ROOT / 'outputs', model_dir=None):
+    data = Path(data_dir)
+    out = Path(model_dir or data / 'model_combined')
+    report = load_report(data)
+    summary = json.loads((out / 'summary.json').read_text(encoding='utf-8'))
+    bundle = load_model(out / 'ridge_combined.joblib')
+    assert bundle['provenance'] == report['provenance'] == summary['provenance']
+    training, validation = read_part(report, 'train'), read_part(report, 'validation')
+    saved = pd.read_csv(out / 'validation_predictions.csv')
+    np.testing.assert_array_equal(saved.source_row_id, np.load(data / 'row_ids_validation.npy'))
+    np.testing.assert_array_equal(saved.points_actual, validation.points)
+    pred = bundle['pipeline'].predict(validation)
+    np.testing.assert_allclose(pred, saved.points_predicted, rtol=0, atol=1e-10)
+    for key in ('MAE', 'RMSE', 'R2'):
+        assert np.isclose(metrics(validation.points, pred)[key], summary['validation'][key])
+    matched = review_matches(validation, normalized_reviews(training.description))
+    np.testing.assert_array_equal(matched, saved.review_matches_train)
+    assert int(matched.sum()) == summary['review_overlap_rows']
+    clean_metrics = metrics(validation.points[~matched], pred[~matched])
+    assert clean_metrics['n'] == summary['validation_without_train_review_overlap']['n']
+    for key in ('MAE', 'RMSE', 'R2'):
+        assert (clean_metrics[key] is None and summary['validation_without_train_review_overlap'][key] is None) or np.isclose(
+            clean_metrics[key], summary['validation_without_train_review_overlap'][key])
+    scores = pd.read_csv(out / 'cv_metrics.csv')
+    means = scores[scores.model.eq('Ridge')].groupby('alpha')[['MAE', 'RMSE']].mean().reset_index()
+    winner = means.sort_values(['MAE', 'RMSE', 'alpha']).iloc[0].alpha
+    assert winner == summary['selected_alpha'] == bundle['alpha']
+    folds = pd.read_csv(out / 'cv_manifest.csv')
+    np.testing.assert_array_equal(folds.source_row_id, np.load(data / 'row_ids_train.npy'))
+    np.testing.assert_array_equal(folds.cv_group, connected_groups(training))
+    assert folds.groupby('cv_group').fold.nunique().eq(1).all()
+    sample = validation.head(20).copy()
+    modified = sample.copy()
+    for col in ('title', 'taster_name', 'taster_twitter_handle', 'winery', 'designation',
+                'region_1', 'region_2', 'price_original', 'log_price', 'points', 'is_non_informative_review'):
+        modified[col] = 'unused value'
+    np.testing.assert_allclose(bundle['pipeline'].predict(sample), bundle['pipeline'].predict(modified), rtol=0, atol=1e-10)
+    assert not summary['test_evaluated']
+    print('PASS: combined raw inference, independent validation metrics, grouped CV selection and unused-field independence.')
 
 
 def main():
-    root = Path(__file__).resolve().parents[1]
-    out = root / 'outputs/model_product'
-    report = json.loads((root / 'outputs/report.json').read_text(encoding='utf-8'))
-    summary = json.loads((out / 'summary.json').read_text(encoding='utf-8'))
-    bundle = joblib.load(out / 'ridge_product.joblib')
-    saved = pd.read_csv(out / 'validation_predictions.csv')
-    y = saved.points_actual.to_numpy()
-    pred = saved.points_predicted.to_numpy()
-    assert np.isclose(mean_absolute_error(y, pred), summary['validation']['MAE'])
-    assert np.isclose(np.sqrt(mean_squared_error(y, pred)), summary['validation']['RMSE'])
-    assert np.isclose(r2_score(y, pred), summary['validation']['R2'])
-    all_metrics = pd.read_csv(out / 'metrics.csv')
-    ridge_val = all_metrics[(all_metrics.split == 'validation') & all_metrics.alpha.notna()]
-    winner = ridge_val.sort_values(['MAE', 'RMSE']).iloc[0]
-    assert winner.model == summary['selected_model']
-    raw = read_source_csv(report['source'], relative_to=root).iloc[saved.source_row_id.iloc[:100]].copy()
-    def predict_raw(frame):
-        prepared = prepare_new_frame(frame, 'product')
-        x = sparse.csr_matrix(bundle['preprocessor'].transform(prepared), dtype=np.float64)
-        return bundle['model'].predict(x[:, bundle['feature_indices']])
-    reproduced = predict_raw(raw)
-    np.testing.assert_allclose(reproduced, pred[:100], atol=1e-8)
-    # Target and unused review fields cannot influence product predictions.
-    modified = raw.copy()
-    modified['points'] = -999
-    modified['description'] = 'completely different review'
-    modified['title'] = 'different title'
-    modified['price_original'] = 9999
-    np.testing.assert_allclose(predict_raw(modified), reproduced, atol=1e-8)
-    assert 'points' not in bundle['feature_names']
-    assert not summary['test_evaluated']
-    print('PASS: independent validation metrics, alpha selection, saved model/raw CSV parity,')
-    print('target and unused-field independence. Test metrics not evaluated.')
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--data-dir', default=str(ROOT / 'outputs'))
+    parser.add_argument('--model-dir')
+    args = parser.parse_args()
+    verify_model(args.data_dir, args.model_dir)
 
 
 if __name__ == '__main__':

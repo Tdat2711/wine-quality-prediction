@@ -42,7 +42,7 @@ Chuyển chữ thường, trim và gộp khoảng trắng; bỏ chuỗi rỗng k
 | train–test | 5 |
 | validation–test | 1 |
 
-Đây là số chuỗi theo từng cặp, không phải số dòng bị trùng hay tổng số chuỗi duy nhất trên toàn bộ split. Không kiểm tra tương đồng ngữ nghĩa hoặc review gần trùng. Kết quả không thay đổi split; cần thống nhất biện pháp giảm/đánh giá leakage trước modeling văn bản.
+Đây là số chuỗi theo từng cặp, không phải số dòng bị trùng hay tổng số chuỗi duy nhất trên toàn bộ split. Không kiểm tra tương đồng ngữ nghĩa hoặc review gần trùng. Kết quả không thay đổi split. Luồng mô hình kết hợp giữ mọi dòng, báo metric validation tổng thể và riêng tập không trùng review train (loại 6 dòng khỏi phép tính phụ, không sửa file split). Không dùng kết quả phụ để tuning. Test có 5 dòng trùng review train; hiện chưa tính metric test. CV trên train nối nhóm cùng title hoặc cùng review không rỗng để tránh chúng qua ranh giới fold.
 
 Bảng tái tạo: [review_overlap.csv](../outputs/eda/tables/review_overlap.csv).
 

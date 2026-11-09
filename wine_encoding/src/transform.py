@@ -3,14 +3,19 @@ import argparse
 from pathlib import Path
 import joblib
 import numpy as np
-import pandas as pd
 from scipy import sparse
+from .data import SCHEMA_VERSION
+from .combined import CombinedInputs
 from .encoding import normalize, with_missing_flags, read_source_csv
 
 
 def prepare_new_frame(raw, profile):
     """Validate profile inputs and supply placeholders for unused source fields."""
     from .encoding import PRODUCT, REVIEW, CATEGORICAL, FLAGS, NUMERIC, TEXT
+    if profile == 'combined':
+        return CombinedInputs().transform(raw)
+    if profile not in ('product', 'review', 'all_attributes_audit'):
+        raise ValueError(f'Unknown profile: {profile}')
     raw = raw.copy()
     required = PRODUCT if profile == 'product' else REVIEW if profile == 'review' else (
         CATEGORICAL + FLAGS + NUMERIC + TEXT)
@@ -29,18 +34,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', required=True)
     parser.add_argument('--encoder', default=default_encoder)
-    parser.add_argument('--profile', choices=['product', 'review', 'all_attributes_audit'],
-                        default='product')
+    parser.add_argument('--profile', choices=['combined', 'product', 'review', 'all_attributes_audit'],
+                        default='combined')
     parser.add_argument('--output', default=default_output)
     args = parser.parse_args()
-    encoder_path = Path(args.encoder)
-    if not encoder_path.is_file() and (module_root / args.encoder).is_file():
-        encoder_path = module_root / args.encoder
-    bundle = joblib.load(encoder_path)
-    raw = read_source_csv(args.input, relative_to=module_root)
-    normalized = prepare_new_frame(raw, args.profile)
-    matrix = sparse.csr_matrix(bundle['preprocessor'].transform(normalized), dtype=np.float32)
-    matrix = matrix[:, bundle['profiles'][args.profile]].tocsr()
+    raw = read_source_csv(args.input)
+    bundle = joblib.load(args.encoder)
+    if bundle.get('schema_version') != SCHEMA_VERSION:
+        raise ValueError('Incompatible encoder; rerun prepare')
+    if args.profile == 'combined':
+        matrix = sparse.csr_matrix(bundle['combined'].transform(raw))
+    else:
+        normalized = prepare_new_frame(raw, args.profile)
+        matrix = sparse.csr_matrix(bundle['preprocessor'].transform(normalized), dtype=np.float32)
+        matrix = matrix[:, bundle['profiles'][args.profile]].tocsr()
     if not np.isfinite(matrix.data).all():
         raise ValueError('Non-finite encoded values')
     output = Path(args.output)
