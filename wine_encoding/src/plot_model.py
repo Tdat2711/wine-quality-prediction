@@ -30,7 +30,7 @@ def render_diagnostics(audit, alpha, mae, rmse, out):
 
 
 if __name__ == '__main__':
-    out = Path(__file__).resolve().parents[1] / 'outputs/model_product'
+    out = Path(__file__).resolve().parents[1] / 'outputs/model_combined'
     summary = json.loads((out / 'summary.json').read_text(encoding='utf-8'))
     render_diagnostics(pd.read_csv(out / 'validation_predictions.csv'),
                        summary['selected_alpha'], summary['validation']['MAE'],

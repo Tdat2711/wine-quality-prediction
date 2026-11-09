@@ -1,182 +1,92 @@
-# Số hóa dữ liệu rượu để chuẩn bị mô hình
+# Metadata + review → Ridge
 
-Project có tiền xử lý đủ 19 cột và huấn luyện **baseline + Ridge** dự đoán `points`.
-Kết quả hiện tại là kết quả validation; chưa đánh giá mô hình trên test.
-Tệp nguồn `../wine_cleaned_final.csv` được đọc nguyên trạng, không bị ghi đè.
+Module dùng split đã khóa của repo. Model mặc định là `combined`; ba profile `product`, `review`, `all_attributes_audit` được giữ để đối chiếu encoding và không phải mô hình chính.
 
-## Chạy
+## Chạy từ repository root
 
-Mở PowerShell tại thư mục project:
+Dùng môi trường hiện có, hoặc cài dependency gốc bằng `python -m pip install -r requirements.txt`.
 
 ```powershell
-python -m pip install -r requirements.txt
-python -m src.prepare --config config.json
-python -m src.verify
+python src/split_data.py
+python -m wine_encoding.src.prepare
+python -m wine_encoding.src.verify
+python -m wine_encoding.src.train
+python -m wine_encoding.src.verify_model
+python -m wine_encoding.src.preview
+python -m wine_encoding.src.transform --input wine_encoding/examples/new_wines.csv
+python -m wine_encoding.src.predict --input wine_encoding/examples/new_wines.csv
+python -m unittest discover -s tests -v
 ```
 
-Đường dẫn input/output trong config được tính từ vị trí `config.json`.
-Lần chạy lại sẽ thay thế các đầu ra cùng tên trong `outputs/`.
+`prepare --config <file>` nhận config JSON; `source`, `split_dir`, `output` tính từ thư mục config. Mọi đường dẫn CLI tính từ thư mục chạy. Sai đường dẫn báo lỗi, không tự tìm dataset khác. Các lệnh `verify`, `train`, `verify_model` hỗ trợ `--data-dir`; train hỗ trợ `--output`, verify_model hỗ trợ `--model-dir`.
 
-## Đủ 19 thuộc tính được xử lý như thế nào?
+## Mẫu và split bất biến
 
-| Cột | Chuyển đổi | Bộ đầu vào |
-|---|---|---|
-| country | One-hot, gom nhóm hiếm | product, review, all |
-| designation | One-hot, gom nhóm hiếm | product, review, all |
-| province | One-hot, gom nhóm hiếm | product, review, all |
-| region_1 | One-hot, gom nhóm hiếm | product, review, all |
-| region_2 | One-hot, giữ nhãn Unknown/Not applicable riêng nếu đủ tần suất | product, review, all |
-| variety | One-hot, gom nhóm hiếm | product, review, all |
-| winery | One-hot, gom nhóm hiếm | product, review, all |
-| price | Điền trung vị train + StandardScaler; thêm cờ thiếu | product, review, all |
-| vintage_year | Điền trung vị train + StandardScaler; thêm cờ thiếu | product, review, all |
-| description | TF-IDF unigram/bigram, tối đa 3.000 đặc trưng | review, all |
-| taster_name | One-hot, gom nhóm hiếm | review, all |
-| is_non_informative_review | False/True thành 0/1 | review, all |
-| title | TF-IDF tối đa 1.000 đặc trưng; đồng thời dùng chia nhóm | all |
-| taster_twitter_handle | One-hot, gom nhóm hiếm | all |
-| price_original | Điền trung vị train + StandardScaler; thêm cờ thiếu | all |
-| log_price | Điền trung vị train + StandardScaler; thêm cờ thiếu | all |
-| price_was_missing | False/True thành 0/1 | all |
-| price_was_corrected | False/True thành 0/1 | all |
-| points | Số float32, lưu riêng thành y | Đáp án, không bao giờ vào X |
+Nguồn mặc định: `data/processed/wine_cleaned_final.csv`, 119.988 dòng. Mẫu có giá quan sát và points: 111.593 dòng; 8.395 dòng thiếu giá vẫn giữ trong nguồn để audit. Chỉ mã hóa mẫu trong split đã khóa: train 78.106, validation 16.745, test 16.742.
 
-`all` là thư mục `all_attributes_audit`. Không xóa cột nào khỏi nguồn.
-19 cột nguồn được biểu diễn bằng 18 cột đầu vào đã mở rộng + đáp án y.
-Không mã hóa chữ tùy ý thành 1, 2, 3. Các nhóm dưới 20 mẫu train được gom hiếm;
-mỗi thuộc tính phân loại có tối đa 256 cột. Cấu hình có thể thay đổi.
-Không bảo toàn riêng từng tên hiếm hoặc từng từ: đó là giảm chiều có chủ đích.
-Category lạ được đưa vào nhóm hiếm nếu encoder đã có nhóm đó, nếu không thì thành
-toàn 0 trong khối của thuộc tính. Từ chưa gặp bị TF-IDF bỏ qua.
+Prepare tái tạo split bằng module chung rồi so sánh cả nội dung và thứ tự với `data/processed/splits/{train,val,test}.csv`. Thiếu hoặc lệch split thì dừng trước khi xuất. Không tự chia lại hay ghi split. `source_row_id` là vị trí 0-based trong CSV nguồn; tên `val` được xuất thành `validation`. Manifest chỉ chứa các dòng đủ điều kiện. Báo cáo phân biệt tổng nguồn, eligible và excluded, lưu đường dẫn tuyệt đối cùng checksum nguồn/split. Di chuyển nguồn cần prepare/train lại.
 
-## Chọn bộ nào để làm mô hình?
+Test chỉ transform bằng encoder fit trên train; không tính metric hay thống kê nhãn test trong prepare/train. Train chỉ đọc CSV train/val; kiểm tra toàn vẹn các nguồn bằng checksum không dùng nhãn test để chọn cấu hình.
 
-- **product**: dùng thông tin sản phẩm để dự đoán điểm trước khi có review.
-  Giả định có thông tin giá/niên vụ hoặc giá trị thiếu và các danh mục sản phẩm.
-- **review**: thêm description, người chấm và cờ chất lượng review. Đây là bài toán
-  ước lượng điểm từ review đã có, có giả định biết người chấm; không so sánh như thể
-  nó giải quyết đúng cùng tình huống với product.
-- **all_attributes_audit**: số hóa toàn bộ để đối chiếu hoặc thử nghiệm có kiểm soát.
-  **Không lấy nguyên bộ này làm mô hình mặc định**: có cột audit, thông tin lặp về giá,
-  tên rượu, danh tính người chấm và văn bản review. Chúng có thể không tồn tại khi sử dụng.
-  Các cột nguồn xử lý giá không tự động là rò rỉ đích points, nhưng cần xét tính khả dụng.
+## Đầu vào và pipeline chính
 
-## Chia dữ liệu và chống rò rỉ
+CSV dự đoán cần đúng sáu cột (có thể có thêm cột không dùng):
 
-Giữ toàn bộ dòng có points, kể cả 8.395 dòng thiếu giá: giá là đầu vào, không phải đáp án.
-Chia theo nhóm title đã chuẩn hóa Unicode, hoa/thường và khoảng trắng, seed 42.
-Tỷ lệ khoảng 70/15/15 theo nhóm; tỷ lệ số dòng có thể khác một chút.
-Không có cùng title chuẩn hóa ở nhiều tập. Cách này không bảo đảm nhận diện cùng
-một rượu nếu tên khác nhau, và không bảo đảm tách theo winery.
+| Cột | Xử lý |
+|---|---|
+| `price` | `log1p`, điền trung vị train, StandardScaler |
+| `vintage_year` | Điền trung vị train, StandardScaler |
+| `country`, `province`, `variety` | Nhãn thiếu, one-hot; min_frequency=20, max_categories=256 |
+| `description` | TF-IDF unigram/bigram, min_df=2, tối đa 3.000 feature, sublinear TF |
 
-Trong thư mục ban đầu không có các split cũ, nên project tạo split mới, không tuyên bố
-tái tạo các số 78.106/16.745/16.742 trong ảnh. Nếu đã có split được duyệt, cần dùng
-lại đúng row ID/split đó thay vì so kết quả giữa hai cách chia.
+Numeric thiếu được chấp nhận khi dự đoán; chữ sai kiểu, số vô hạn và giá không dương bị từ chối. Category mới được gom vào nhóm hiếm nếu có, nếu không thành khối 0. Review thiếu/trống thành vector văn bản 0. Giữ stopword và từ phủ định; từ lạ bị bỏ qua. Tập fit cần có từ xuất hiện ít nhất hai dòng; nếu vocabulary rỗng thì báo lỗi, không train mô hình văn bản giả.
 
-Trung vị, scaler, nhóm hiếm, vocabulary và IDF chỉ fit trên train.
-Validation/test chỉ transform. `points` được tách trước khi fit encoder.
-Chưa sửa lại các quyết định làm sạch trong CSV nguồn; không thể loại bỏ rò rỉ có thể
-đã phát sinh trong lịch sử làm sạch khi chưa có code/dữ liệu trước đó.
+Không cần points, title, người chấm hay cột audit. Không dùng title, winery, designation, region_1/2, taster hoặc cờ audit làm predictor chính. Log giá được tính từ price trong pipeline, không tin cột log_price truyền vào. Không dùng đồng thời giá gốc và log giá.
 
-Khi tuning bằng cross-validation, cần fit lại tiền xử lý trong từng fold từ dữ liệu
-chưa mã hóa, không dùng nguyên X_train đã mã hóa bằng toàn train cho CV. Các file
-hiện tại phù hợp luồng train -> chọn trên validation -> đánh giá test cuối cùng.
-Không xem test để chọn đặc trưng hoặc tham số.
+## CV và đánh giá validation
 
-## Đầu ra
+- 5 fold trên train, nhóm là thành phần liên thông của title chuẩn hóa hoặc review chuẩn hóa không rỗng; chuỗi rỗng không nối nhóm.
+- Fit encoder riêng trong từng fold; dùng lại encoder giữa các alpha chỉ bên trong cùng fold.
+- Lưới alpha mặc định `[0.1, 1, 10, 100, 1000]`; chọn MAE CV trung bình thấp nhất, hòa thì RMSE, rồi alpha nhỏ hơn.
+- Ridge LSQR, tol=1e-8, max_iter=10000; từ chối nếu chạm giới hạn lặp.
+- Pipeline cuối chỉ fit train, chưa refit train+validation. Baseline là trung bình train. Validation không chọn lại alpha.
+- Báo MAE/RMSE/R² tổng thể và riêng các dòng không trùng review train. Hiện có 6 dòng validation trùng review train; giữ nguyên chúng trong file split và báo cờ từng dòng.
+
+Chuẩn hóa review để audit: chữ thường, trim, gộp khoảng trắng, bỏ chuỗi rỗng. Không phát hiện near-duplicate/semantic duplicate. Giữ lịch sử seed-42 holdout từng được quan sát; không tuyên bố test mới hoàn toàn hoặc zero leakage.
+
+## Artifact và tương thích
 
 ```text
 outputs/
-  encoder.joblib             # encoder đã fit trên train và chỉ số cột từng bộ
-  report.json                # số dòng, feature, missing, seed, hash nguồn
-  column_coverage.csv        # chứng minh đủ 19 cột có vai trò
-  split_manifest.csv         # source_row_id (0-based), title_group, split
-  y_train.npy / y_validation.npy / y_test.npy
-  row_ids_train.npy / row_ids_validation.npy / row_ids_test.npy
-  product/                  # bộ thông tin sản phẩm
-  review/                   # bộ có review
-  all_attributes_audit/     # bản đầy đủ để đối chiếu
-    X_train.npz / X_validation.npz / X_test.npz
-    features.csv            # thứ tự cột tương ứng ma trận X
-    sample_5_rows.csv        # 5 dòng đầu train, đọc để minh họa
+  report.json, encoder.joblib, split_manifest.csv, column_coverage.csv
+  row_ids_{train,validation,test}.npy, y_{train,validation,test}.npy
+  combined/, product/, review/, all_attributes_audit/
+    features.csv, sample_5_rows.csv, X_{train,validation,test}.npz
+  model_combined/
+    ridge_combined.joblib          # Pipeline raw inputs → preprocessing → Ridge
+    summary.json, RESULTS.md
+    cv_metrics.csv, cv_summary.csv, cv_manifest.csv
+    metrics.csv, validation_predictions.csv, errors_by_group.csv
+    largest_errors.csv, ridge_coefficients.csv, validation_diagnostics.png
+    new_predictions.csv
 ```
 
-`X` là ma trận thưa CSR float32: mọi giá trị đều là số, không có NaN/inf sau xử lý.
-Không xuất toàn bộ thành CSV đặc vì TF-IDF/one-hot có hàng nghìn cột và phần lớn là 0.
-`source_row_id` không phải feature. X, y và row_ids cùng split có cùng thứ tự hàng.
+Ma trận CSR; không densify toàn bộ dữ liệu. Bộ combined độc lập với encoder của các trường audit; train CV trực tiếp trên dữ liệu chưa mã hóa. Ba bộ cũ vẫn chuẩn hóa/one-hot/TF-IDF 19 cột theo thiết kế ban đầu, points tách thành y; chỉ dùng chúng trong thử nghiệm có kiểm soát.
 
-```python
-import numpy as np
-import pandas as pd
-from scipy.sparse import load_npz
+Artifact schema version 2. Encoder/model cũ cần tái tạo; model product không tự động thay thế combined. Chuẩn bị lại encoding yêu cầu train lại model; verify so checksum nguồn/split để phát hiện thay đổi. Chỉ load joblib do bạn tạo và tin cậy. Các lệnh tái sinh ghi đè artifact cùng tên, không sửa dữ liệu nguồn/split.
 
-X_train = load_npz('outputs/product/X_train.npz')
-y_train = np.load('outputs/y_train.npy')
-features = pd.read_csv('outputs/product/features.csv')
-print(X_train.shape, y_train.shape)
-# Truyền X_train, y_train vào mô hình ở bước tiếp theo.
-# Các mô hình cần dense phải xử lý cẩn thận bộ nhớ; không toarray toàn bộ review.
-```
+Predict giữ nguyên thứ tự dòng, thêm `points_predicted` và `prediction_outside_train_target_range`. Không ép dự đoán trong 80–100, không làm tròn/cắt điểm khi đánh giá.
 
-## Mã hóa dữ liệu mới
+## Đánh giá test tách riêng — chưa chạy trong đợt này
+
+Chỉ chạy sau khi khóa cấu hình và quyết định mở test:
 
 ```powershell
-python -m src.transform --input du_lieu_moi.csv --profile product --output outputs/new_product.npz
+python -m wine_encoding.src.evaluate_test
 ```
 
-Chạy thử bằng hai dòng minh họa (không phải dữ liệu kiểm định độc lập):
+Lệnh chỉ load model và đánh giá, không fit/tuning; xuất vào `model_combined/test_evaluation/` và từ chối ghi đè thư mục đã có. Báo tổng thể và tập không trùng review train. Không sửa mô hình theo kết quả test.
 
-```powershell
-python -m src.transform --input examples/new_wines.csv --profile product --output outputs/example_new_product.npz
-```
+## Giới hạn
 
-Product chỉ cần đủ 9 cột sản phẩm trong bảng, không cần points, review hay cột audit.
-Review cần thêm description, taster_name, is_non_informative_review.
-Chấp nhận ô thiếu numeric, nhưng không chấp nhận giá trị chữ sai kiểu hay cờ không hợp lệ.
-Output giữ nguyên thứ tự dòng input và dùng đúng số/thứ tự feature đã học.
-Lệnh này không tính điểm: muốn có điểm còn cần mô hình dự đoán đã huấn luyện.
-Chỉ load joblib do bạn tạo và tin cậy.
-
-## Huấn luyện baseline và Ridge
-
-```powershell
-python -m src.train
-python -m src.verify_model
-```
-
-Lệnh train dùng bộ `product` gồm 996 feature (từ 9 cột sản phẩm và cờ thiếu),
-không dùng nội dung review, người chấm hay target làm feature. Baseline luôn dự đoán
-trung bình points của train. Ridge dùng solver LSQR, tol=1e-8, max_iter=10000.
-Chọn alpha trong [0.1, 1, 10, 100, 1000] bằng MAE validation thấp nhất;
-nếu bằng nhau dùng RMSE. Không mở ma trận test trong lệnh train.
-Mô hình được lưu vẫn chỉ fit trên train, chưa fit lại bằng train+validation.
-
-Đầu ra trong `outputs/model_product/`:
-
-- `RESULTS.md`, `summary.json`: kết quả và giới hạn.
-- `metrics.csv`: MAE/RMSE/R² trên train và validation của tất cả cấu hình.
-- `validation_predictions.csv`: điểm thật, điểm dự đoán và sai số từng dòng.
-- `errors_by_group.csv`, `largest_errors.csv`: kiểm tra nhóm dự đoán kém.
-- `ridge_coefficients.csv`: hệ số; không diễn giải như tác động nhân quả.
-- `validation_diagnostics.png`: điểm thật–dự đoán, phần dư và phân phối phần dư.
-- `ridge_product.joblib`: mô hình kèm encoder để dự đoán dữ liệu mới.
-
-Không cắt điểm hay làm tròn dự đoán trước khi đánh giá. Đây là hồi quy tuyến tính,
-có thể trả về điểm ngoài khoảng quan sát; sai số và R² không phải phần trăm accuracy.
-
-## Dự đoán từ CSV mới
-
-```powershell
-python -m src.predict --input examples/new_wines.csv
-```
-
-CSV cần 9 cột sản phẩm, không cần points. Kết quả mặc định:
-`outputs/model_product/new_predictions.csv`, thêm `points_predicted` và cờ
-`prediction_outside_train_target_range`. Hai dòng example chỉ minh họa cách gọi,
-không có nhãn thật nên không dùng để đánh giá độ chính xác.
-Không điền số dự đoán vào points thực tế.
-
-Các lệnh đọc CSV bỏ khoảng trắng ở đầu/cuối tên cột, không sửa tệp nguồn.
-Train kiểm tra hash nguồn; chỉ chấp nhận khác biệt khoảng trắng trước tên cột đầu
-nếu loại đúng khoảng trắng đó khôi phục hash cũ, chứng minh phần dữ liệu không đổi.
-Thay đổi khác phải số hóa lại trước khi train.
+Mô hình cần review đã tồn tại và ước lượng điểm của người đánh giá, không đo chất lượng khách quan trước review. Chưa có đối chứng để kết luận phần cải thiện riêng do review. Hệ số không thể hiện nhân quả; cần xem số mẫu khi đọc sai số theo nhóm. Chưa thực hiện kiểm định thống kê chính thức.

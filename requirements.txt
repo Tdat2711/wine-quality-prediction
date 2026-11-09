@@ -1,6 +1,6 @@
 pandas
 numpy
-scikit-learn
+scikit-learn>=1.2
 matplotlib
 seaborn
 jupyter
@@ -9,3 +9,4 @@ statsmodels
 nbformat
 nbclient
 ipykernel
+joblib

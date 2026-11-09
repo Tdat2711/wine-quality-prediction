@@ -1,51 +1,63 @@
-"""Integration checks on the saved files and encoder."""
-import json
+"""Verify locked artifacts, provenance, row ordering and train-only encoders."""
+import argparse
 from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
 from scipy import sparse
-from .encoding import normalize, with_missing_flags, read_source_csv
+from .data import ROOT, load_report, locked_parts
+from .encoding import SOURCE_COLUMNS, normalize, with_missing_flags
+
+
+def verify(data_dir=ROOT / 'outputs'):
+    out = Path(data_dir)
+    report = load_report(out)
+    raw, parts = locked_parts(report['config'])
+    bundle = joblib.load(out / 'encoder.joblib')
+    if bundle.get('schema_version') != report['schema_version'] or bundle.get('provenance') != report['provenance']:
+        raise ValueError('Encoder/report provenance mismatch')
+    manifest = pd.read_csv(out / 'split_manifest.csv')
+    assert manifest.source_row_id.is_unique
+    assert len(manifest) == report['eligible_rows'] == sum(map(len, parts.values()))
+    assert manifest.groupby('title_group')['split'].nunique().eq(1).all()
+    assert report['rows'] == len(raw)
+    assert report['excluded_rows'] == len(raw) - len(manifest)
+    coverage = pd.read_csv(out / 'column_coverage.csv')
+    assert set(coverage.column) == set(SOURCE_COLUMNS)
+    for name, part in parts.items():
+        ids = np.load(out / f'row_ids_{name}.npy')
+        np.testing.assert_array_equal(ids, part.index)
+        np.testing.assert_array_equal(np.load(out / f'y_{name}.npy'), part.points.to_numpy(dtype=np.float32))
+        stored_manifest = manifest[manifest.split.eq(name)]
+        np.testing.assert_array_equal(stored_manifest.source_row_id, ids)
+        np.testing.assert_array_equal(stored_manifest.title_group, part.title_clean)
+        sample = part.iloc[:10]
+        diagnostic = sparse.csr_matrix(bundle['preprocessor'].transform(
+            with_missing_flags(normalize(sample[SOURCE_COLUMNS]))), dtype=np.float32)
+        expected = {profile: diagnostic[:, cols] for profile, cols in bundle['profiles'].items()}
+        expected['combined'] = sparse.csr_matrix(bundle['combined'].transform(sample))
+        for profile, encoded in expected.items():
+            saved = sparse.load_npz(out / profile / f'X_{name}.npz')
+            assert saved.shape == (len(part), report['profiles'][profile])
+            assert np.isfinite(saved.data).all()
+            assert len(pd.read_csv(out / profile / 'features.csv')) == saved.shape[1]
+            diff = saved[:len(sample)] - encoded
+            assert not diff.nnz or np.max(np.abs(diff.data)) < 1e-6
+    train = normalize(parts['train'][SOURCE_COLUMNS])
+    for col in ('price', 'vintage_year', 'price_original', 'log_price'):
+        median = bundle['preprocessor'].named_transformers_[col].named_steps['impute'].statistics_[0]
+        assert np.isclose(median, train[col].median())
+    combined = bundle['combined']
+    transformed = combined.named_steps['inputs'].transform(parts['train'])
+    learned = combined.named_steps['features'].named_transformers_['numeric'].named_steps['impute'].statistics_
+    np.testing.assert_allclose(learned, transformed[['log_price', 'vintage_year']].median())
+    print('PASS: locked split/order, provenance, train medians, finite matrices and reload parity.')
 
 
 def main():
-    root = Path(__file__).resolve().parents[1]
-    output = root / 'outputs'
-    report = json.loads((output / 'report.json').read_text(encoding='utf-8'))
-    bundle = joblib.load(output / 'encoder.joblib')
-    frame = read_source_csv(report['source'], relative_to=root)
-    manifest = pd.read_csv(output / 'split_manifest.csv')
-    if not manifest.groupby('title_group')['split'].nunique().eq(1).all():
-        raise AssertionError('Title group overlap')
-    coverage = pd.read_csv(output / 'column_coverage.csv')
-    assert len(coverage) == 19 and set(coverage.column) == set(frame.columns)
-    assert coverage.loc[coverage.column.eq('points'), 'encoded_feature_count'].iloc[0] == 0
-    train_ids = np.load(output / 'row_ids_train.npy')
-    train = normalize(frame.iloc[train_ids])
-    for col in ['price', 'vintage_year', 'price_original', 'log_price']:
-        actual = bundle['preprocessor'].named_transformers_[col].named_steps['impute'].statistics_[0]
-        assert np.isclose(actual, train[col].median()), f'Non-train median: {col}'
-    for split in ['train', 'validation', 'test']:
-        y = np.load(output / f'y_{split}.npy')
-        ids = np.load(output / f'row_ids_{split}.npy')
-        np.testing.assert_array_equal(y, frame.points.iloc[ids].to_numpy(dtype=np.float32))
-        for profile, columns in bundle['profiles'].items():
-            x = sparse.load_npz(output / profile / f'X_{split}.npz')
-            assert x.shape == (len(y), len(columns))
-            assert np.isfinite(x.data).all()
-    # Reloaded artifact must reproduce output, and tolerate unseen categories/missing numbers.
-    sample = normalize(frame.iloc[train_ids[:3]])
-    transformed = sparse.csr_matrix(bundle['preprocessor'].transform(with_missing_flags(sample)), dtype=np.float32)
-    for profile, columns in bundle['profiles'].items():
-        saved = sparse.load_npz(output / profile / 'X_train.npz')[:3]
-        diff = saved - transformed[:, columns]
-        assert diff.nnz == 0 or np.abs(diff.data).max() < 1e-6
-    sample.loc[sample.index[0], 'country'] = '__NEVER_SEEN_COUNTRY__'
-    sample.loc[sample.index[0], ['price', 'vintage_year']] = np.nan
-    unseen = bundle['preprocessor'].transform(with_missing_flags(sample))
-    assert np.isfinite(unseen.data).all()
-    print('PASS: 19-column coverage, group separation, train-only medians, X/y alignment,')
-    print('finite matrices, reload consistency, unseen categories and missing numeric inputs.')
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--data-dir', default=str(ROOT / 'outputs'))
+    verify(parser.parse_args().data_dir)
 
 
 if __name__ == '__main__':
