@@ -1,0 +1,3 @@
+price,country,variety,vintage_year,designation,province,region_1,region_2,winery
+30,France,Chardonnay,2014,Not specified,Burgundy,Unknown,Not applicable,Example Winery A
+,Italy,Red Blend,,Reserve,Tuscany,Unknown,Not applicable,Example Winery B
