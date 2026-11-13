@@ -35,15 +35,15 @@ File `data/processed/wine_cleaned_final.csv` sau loại trùng có 119.988 dòng
 | Trường | Cách tạo / ý nghĩa | Vai trò |
 |---|---|---|
 | `points` | Điểm do người đánh giá chấm | Target; không phải chất lượng khách quan |
-| `log_price` | `log1p(price)` với giá quan sát, thiếu nếu `price` thiếu | Feature số của mô hình kết hợp dự kiến |
-| `country`, `province`, `variety`, `vintage_year` | Metadata sản phẩm; năm trích có quy tắc từ `title` | Feature sản phẩm của mô hình kết hợp dự kiến |
+| `log_price` | `log1p(price)` với giá quan sát, thiếu nếu `price` thiếu | Feature số; pipeline tính lại log1p từ price đầu vào |
+| `country`, `province`, `variety`, `vintage_year` | Metadata sản phẩm; năm trích có quy tắc từ `title` | Feature sản phẩm của mô hình kết hợp |
 | `price_original` | Giá trước hai sửa lỗi nhập đã biết, kể cả trạng thái thiếu | Audit, không đưa vào model |
 | `price_was_missing` | Giá thiếu ở dòng đã làm sạch | Audit và chọn mẫu, không đưa vào model |
 | `price_was_corrected` | Một trong hai giá đã sửa có lưu dấu | Audit, không đưa vào model |
 | `title` | Tiêu đề, chuẩn hóa chữ thường/khoảng trắng khi chia nhóm | Chống title-group overlap; không đưa nguyên văn vào model |
-| `description` | Lời review của người đánh giá | Predictor văn bản dự kiến, TF-IDF unigram/bigram fit trên train |
+| `description` | Lời review của người đánh giá | Predictor văn bản, TF-IDF unigram/bigram fit trên train hoặc train fold |
 | `taster_name`, `taster_twitter_handle` | Thông tin người đánh giá | Audit/bias, không làm predictor chính |
 
 Các nhãn phân loại thiếu như `Unknown` là giá trị quy ước theo từng dòng; không suy luận quốc gia hoặc tỉnh từ ánh xạ học trên toàn bộ dữ liệu trước split.
 
-`price` là giá gốc; dùng `log_price` thay vì đồng thời hai biểu diễn trong thiết kế mặc định. `region_1`, `region_2`, `winery`, `designation` là dữ liệu bổ trợ chưa chọn làm predictor chính. `is_non_informative_review` là cờ review dưới 10 từ, chỉ để audit; không tự loại review. `title_clean` chỉ có trong file split, phục vụ chia nhóm. Chưa fit TF-IDF hay huấn luyện mô hình.
+`price` là giá gốc; dùng `log_price` thay vì đồng thời hai biểu diễn trong thiết kế mặc định. `region_1`, `region_2`, `winery`, `designation` là dữ liệu bổ trợ chưa chọn làm predictor chính. `is_non_informative_review` là cờ review dưới 10 từ, chỉ để audit; không tự loại review. `title_clean` chỉ có trong file split, phục vụ chia nhóm. Pipeline metadata + TF-IDF → Ridge đã được triển khai trong `wine_encoding`; chọn alpha bằng CV theo nhóm trên train, báo validation và chưa đánh giá test.

@@ -14,23 +14,41 @@ Repository tổ chức theo chức năng, dùng chung một pipeline cleaning, m
 | `outputs/eda/figures/` | Hình PNG được tạo lại bằng code |
 | `outputs/eda/tables/` | Bảng mô tả và audit CSV |
 | `docs/` | Audit, dictionary, quyết định cleaning, báo cáo split và EDA |
-| `tests/` | Kiểm tra cleaning, split, lựa chọn mẫu và EDA |
+| `tests/` | Kiểm tra cleaning, split, lựa chọn mẫu, EDA và encoding |
+| `wine_encoding/` | Module tiền xử lý, số hóa dữ liệu (combined và ba bộ đối chiếu), huấn luyện baseline + Ridge, đánh giá và suy luận |
+| `wine_encoding/outputs/` | Artifact tiền xử lý (`encoder.joblib`), ma trận đặc trưng `X_*.npz`, model `model_combined/ridge_combined.joblib`, báo cáo đánh giá |
 
 ## Luồng chạy hiện có
 
-1. `python src/pipeline.py`: raw → interim → cleaned, kèm validation.
+1. `python src/pipeline.py`: raw → interim → cleaned, kèm validation (`data/processed/wine_cleaned_final.csv`).
 2. `python src/split_data.py`: tái tạo split trong bộ nhớ, so sánh file hiện có; không ghi đè.
 3. `python src/split_data.py --write`: chỉ tạo split chưa tồn tại, từ chối nếu file đã có không khớp.
 4. `python src/create_eda_plots.py`: cleaned dùng cho audit, train dùng cho phân tích chi tiết; review holdout chỉ dùng audit trùng văn bản.
 5. Mở notebook theo thứ tự; notebook outlier giải thích các quyết định cleaning, không phải bước xử lý bổ sung ngoài pipeline.
-6. `python -m unittest discover -s tests -v`: kiểm tra các quy tắc đang triển khai.
+6. `python -m unittest discover -s tests -v`: kiểm tra các quy tắc đang triển khai (bao gồm kiểm thử làm sạch, chia tập, EDA và encoding).
 
 Logic split đã được chuyển từ notebook phần việc sang module chung; notebook mới chỉ kiểm tra, không xuất lại CSV. Các nội dung bảng khoảng giá, hình giá–điểm, bối cảnh và chuẩn bị mô hình được tích hợp trong notebook chức năng và README.
 
-## Giai đoạn mô hình dự kiến
+## Module tiền xử lý và mô hình hóa (`wine_encoding`)
 
-Giá và niên vụ → xử lý số; quốc gia/vùng/giống nho → one-hot; review → TF-IDF unigram/bigram. Ghép thành ma trận đưa vào Ridge để dự đoán `points`. Mọi bộ xử lý học từ dữ liệu chỉ fit trên train.
+Module mặc định dùng **log1p(price), vintage_year, country, province, variety và description TF-IDF → Ridge**. Không dùng title, danh tính người chấm hoặc cột audit làm predictor chính. Một pipeline lưu toàn bộ chuẩn bị input, preprocessing và Ridge; model ở `wine_encoding/outputs/model_combined/ridge_combined.joblib`.
 
-Chưa có module huấn luyện, đánh giá, dự đoán, model artifact hay metric. Chỉ thêm các thành phần này khi triển khai thực tế; không tạo file rỗng. Khi có, pipeline lưu phải bao gồm cả preprocessing và Ridge; output đánh giá phải có mã bản ghi, điểm thật/dự đoán và split sử dụng. CV theo nhóm trên train, validation để khóa cấu hình, test đánh giá cuối.
+- Prepare đối chiếu split đã khóa và thứ tự dòng qua module chung; chỉ mã hóa 111.593 dòng đủ điều kiện, không ghi dữ liệu/split gốc.
+- CV 5 fold trên train nối nhóm cùng title hoặc review không rỗng; fit preprocessing riêng từng fold. Chọn alpha bằng MAE CV, hòa thì RMSE rồi alpha nhỏ hơn.
+- Fit model cuối trên train; báo validation tổng thể và riêng phần không trùng review train. Baseline là trung bình train. Không đánh giá test trong luồng train.
+- Giữ ba profile encoding cũ để đối chiếu; model chính dùng profile combined độc lập.
+- Tests tự tạo fixture/artifact tạm, không cần chuẩn bị model thật trước.
 
-Giữ lịch sử holdout và báo cáo review trùng. Không thay split hoặc tuning theo test để chọn kết quả thuận lợi. Không sửa dữ liệu raw hoặc chép bản dữ liệu/model riêng theo người thực hiện.
+Chạy từ repo root:
+
+```powershell
+python -m wine_encoding.src.prepare
+python -m wine_encoding.src.verify
+python -m wine_encoding.src.train
+python -m wine_encoding.src.verify_model
+python -m wine_encoding.src.predict --input wine_encoding/examples/new_wines.csv
+```
+
+Đường dẫn config tính từ file config; đường dẫn CLI tính từ thư mục chạy. Sai input báo lỗi. Artifact schema v2 có checksum nguồn/split; model product cũ không tự thay thế combined. Xem [hướng dẫn đầy đủ](../wine_encoding/README.md).
+
+Giữ mọi dòng trong split và lịch sử holdout từng được quan sát. Báo ảnh hưởng review trùng, chưa kiểm tra near-duplicate; không tuyên bố zero leakage. Lệnh `evaluate_test` tách riêng chỉ dùng sau khi khóa mô hình, chưa chạy trong đợt này. Không sửa raw/cleaned hoặc đổi seed để chọn kết quả thuận lợi.

@@ -1,0 +1,2 @@
+# Shared dependency list; install from the repository root.
+-r ../requirements.txt
