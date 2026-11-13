@@ -33,7 +33,7 @@ Một mô hình kết hợp duy nhất **chưa chứng minh review cải thiện
 | Đánh giá validation | Đo sai số tổng thể và theo nhóm | MAE, RMSE, R², dự đoán và phân tích phần dư |
 | Báo cáo | Kết nối phát hiện với câu hỏi và giới hạn | Báo cáo và phần trình bày có bằng chứng |
 
-Đã triển khai pipeline **metadata + TF-IDF review → Ridge**, chọn alpha bằng CV theo nhóm trên train và báo cáo validation. Chưa đánh giá test trong luồng này và chưa chạy kiểm định chính thức. Không dùng embedding; web/API không thuộc đầu ra hiện tại.
+Đã triển khai pipeline **metadata + TF-IDF review → Ridge**, chọn alpha bằng CV theo nhóm trên train và báo cáo validation. Đã đánh giá test ngày 13/11/2026 bằng mô hình đã khóa; chưa chạy kiểm định chính thức. Không dùng embedding; web/API không thuộc đầu ra hiện tại.
 
 ## 3. Dữ liệu và vai trò biến
 
@@ -74,7 +74,7 @@ flowchart TD
     T --> F
     F --> M[Ridge; CV theo nhóm trên train]
     M --> V[Validation; báo cáo mô hình đã khóa bằng CV]
-    V --> X[Đánh giá test cuối - dự kiến]
+    V --> X[Đánh giá test cuối - hoàn thành]
     Q --> B[Báo cáo và diễn giải]
     I --> B
     X --> B
@@ -123,7 +123,7 @@ Pipeline mặc định nhận `price`, `vintage_year`, `country`, `province`, `v
 
 Chọn alpha `[0.1, 1, 10, 100, 1000]` bằng CV 5 fold trên train; nối các dòng có chung title chuẩn hóa hoặc review chuẩn hóa không rỗng thành nhóm, kể cả quan hệ bắc cầu. Mỗi fold fit preprocessing độc lập. Chọn MAE trung bình nhỏ nhất, hòa thì RMSE rồi alpha nhỏ hơn. Fit pipeline cuối trên train, so với baseline trung bình train và báo validation; không fit lại bằng train + validation.
 
-Báo MAE chính, RMSE và R² phụ, sai số theo nhóm và số mẫu. Validation có cả kết quả tổng thể lẫn tập không trùng review với train. Không làm tròn/cắt điểm trước khi tính metric. Chưa đánh giá test; lệnh đánh giá test riêng chỉ dùng sau khi đã khóa mô hình, không tuning theo kết quả test.
+Báo MAE chính, RMSE và R² phụ, sai số theo nhóm và số mẫu. Validation có cả kết quả tổng thể lẫn tập không trùng review với train. Không làm tròn/cắt điểm trước khi tính metric. Đã đánh giá test sau khi khóa mô hình ngày 13/11/2026; xem [báo cáo test](docs/model_test_report.md). Không tuning theo kết quả test.
 
 Lưu toàn bộ chuẩn bị đầu vào, preprocessing và Ridge trong một pipeline. Suy luận cần review đã tồn tại, không cần `points`. Đây là ước lượng điểm review, không phải dự đoán chất lượng trước khi có review. Không có thí nghiệm đối chứng để kết luận mức cải thiện do thêm review.
 
@@ -227,7 +227,7 @@ Chạy từ repo root. Prepare đối chiếu split đã khóa trước khi xu�
 | Review trùng giữa split | Giữ split; báo metric validation tổng thể và không trùng train |
 | Kiểm định chính thức | Chưa thực hiện |
 | TF-IDF + Ridge kết hợp | Đã triển khai CV theo nhóm, pipeline train và suy luận |
-| MAE, RMSE, R² | Báo cáo validation được tạo bằng train; test chưa đánh giá |
+| MAE, RMSE, R² | Đã có validation và test; test MAE 1,208998, RMSE 1,542601, R² 0,751284 |
 
 Các quan sát mô tả trên **78.106 review train**:
 
@@ -236,7 +236,7 @@ Các quan sát mô tả trên **78.106 review train**:
 - Điểm trung vị theo bốn khoảng giá tăng từ **86** đến **91**; chưa suy ra nhân quả.
 - Review dài trung vị **40 từ**; **29** review dưới 10 từ, không có review trống trên train.
 
-Các số EDA trên là mô tả dữ liệu. Kết quả dự đoán được tạo riêng tại `wine_encoding/outputs/model_combined/RESULTS.md`; xem [báo cáo validation đã kiểm chứng](docs/model_validation_report.md). Kết quả này không thay thế kiểm định thống kê.
+Các số EDA trên là mô tả dữ liệu. Kết quả dự đoán được tạo riêng tại `wine_encoding/outputs/model_combined/RESULTS.md`; xem [báo cáo validation đã kiểm chứng](docs/model_validation_report.md) và [đánh giá test cuối](docs/model_test_report.md). Kết quả này không thay thế kiểm định thống kê.
 
 ## 8. Giới hạn và sử dụng kết quả
 
