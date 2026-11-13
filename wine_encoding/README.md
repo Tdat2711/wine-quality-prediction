@@ -77,9 +77,9 @@ Artifact schema version 2. Encoder/model cũ cần tái tạo; model product kh�
 
 Predict giữ nguyên thứ tự dòng, thêm `points_predicted` và `prediction_outside_train_target_range`. Không ép dự đoán trong 80–100, không làm tròn/cắt điểm khi đánh giá.
 
-## Đánh giá test tách riêng — chưa chạy trong đợt này
+## Đánh giá test tách riêng — đã chạy ngày 13/11/2026
 
-Chỉ chạy sau khi khóa cấu hình và quyết định mở test:
+Đã chạy bằng mô hình khóa alpha = 1: MAE **1,208998**, RMSE **1,542601**, R² **0,751284** trên 16.742 dòng test. Xem [báo cáo test](../docs/model_test_report.md). Lệnh đã dùng (không chạy lại vào thư mục đã có):
 
 ```powershell
 python -m wine_encoding.src.evaluate_test

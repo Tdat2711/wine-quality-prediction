@@ -1,5 +1,7 @@
 # Kết quả mô hình kết hợp — validation
 
+Cập nhật: đánh giá test riêng đã hoàn thành ngày 13/11/2026; xem [báo cáo test](model_test_report.md). Các nội dung bên dưới mô tả trạng thái tại lần validation ngày 09/11/2026.
+
 Lần chạy ngày 09/11/2026. Model metadata + TF-IDF review → Ridge; không đánh giá test trong lần chạy này.
 
 ## Dữ liệu và phương pháp
