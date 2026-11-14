@@ -15,3 +15,6 @@ data/processed/wine_missing_values_handled.csv
 data/processed/wine_basic_formatted.csv
 data/processed/wine_outliers_noise_handled.csv
 data/processed/wine_ready_for_ML.csv
+
+# Local notebook kernel connection secrets and runtime files
+outputs/quality/kernel-runtime/

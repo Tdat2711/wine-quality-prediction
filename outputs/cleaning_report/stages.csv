@@ -1,0 +1,6 @@
+stage,rows,columns,missing_cells,missing_price,exact_duplicate_rows_excluding_export_index,placeholder_cells,removed_rows,changed_cells_existing_columns,added_columns,short_review_flags,price_correction_flags
+raw,129971,14,204752,8996,9983,0,0,0.0,0,0,0
+missing,129971,14,8996,8996,9983,195755,0,195756.0,0,0,0
+consistency,129971,14,8996,8996,9983,195755,0,42992.0,0,0,0
+duplicates,119988,13,8395,8395,0,181805,9983,,0,0,0
+outliers_noise,119988,19,29513,8395,0,181805,0,2.0,6,39,2

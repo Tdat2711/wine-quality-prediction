@@ -1,0 +1,21 @@
+{
+  "tool_version": "1.0",
+  "generated_at": "2026-11-14T10:10:59.414462+00:00",
+  "scope": "cleaned audit; train-only detailed EDA; heldout description only for overlap",
+  "seed": 42,
+  "python": "3.13.9",
+  "packages": {
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "matplotlib": "3.11.2",
+    "joblib": "1.6.0"
+  },
+  "inputs": {
+    "C:\\Users\\pnvto\\Data Science\\wine-quality-prediction\\data\\processed\\wine_cleaned_final.csv": "e84affec87e91e1e0c0175b1cefafe6ff31373ff15180ecded34739ef43c0461",
+    "C:\\Users\\pnvto\\Data Science\\wine-quality-prediction\\data\\processed\\splits\\train.csv": "25e9690c1878ffb739326bd7bfde295d46090061849f2a199e0c3cde20d798ef",
+    "C:\\Users\\pnvto\\Data Science\\wine-quality-prediction\\data\\processed\\splits\\val.csv": "e87a5ca9aa61460d3d3eeb258f1cfd8a549041cf3ad29233597ee7246274253c",
+    "C:\\Users\\pnvto\\Data Science\\wine-quality-prediction\\data\\processed\\splits\\test.csv": "c807506ac14bfedfb6e08f36471e299b9c849636bf891f5634544851a8506d6e"
+  }
+}

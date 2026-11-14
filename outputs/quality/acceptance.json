@@ -1,0 +1,24 @@
+{
+  "tool_version": "1.0",
+  "generated_at": "2026-11-14T10:12:05.119915+00:00",
+  "scope": "implementation acceptance; original data and artifacts preserved",
+  "seed": null,
+  "python": "3.13.9",
+  "packages": {
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "matplotlib": "3.11.2",
+    "joblib": "1.6.0"
+  },
+  "inputs": {
+    "C:\\Users\\pnvto\\Data Science\\wine-quality-prediction\\outputs\\quality\\protected_baseline.json": "f11b648f363904e5ff41a373c6886da6405a5515742f5885dccf2c698a934728"
+  },
+  "tests_passed": 40,
+  "notebooks_passed": 4,
+  "model_verification": "pass",
+  "demo_rows": 2,
+  "visual_review": "new EDA and model figures inspected",
+  "real_model_refitted": false
+}

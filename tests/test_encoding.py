@@ -253,6 +253,28 @@ class EncodingTests(unittest.TestCase):
             joblib.dump({'profile': 'product'}, old)
             load_model(old)
 
+    def test_supplementary_reports_only_read_saved_artifacts(self):
+        import shutil
+        from wine_encoding.src.report_results import run as report_results
+        from wine_encoding.src.explain_features import run as explain_features
+        from src.reporting import sha256
+        clone = self.root / 'report-fixture-input'
+        shutil.copytree(self.out, clone)
+        evaluate_test(clone)
+        before = {str(p): sha256(p) for p in clone.rglob('*') if p.is_file()}
+        report_out, features_out = self.root / 'supplementary', self.root / 'feature-report'
+        with patch('sklearn.pipeline.Pipeline.fit', side_effect=AssertionError('Must not refit')), \
+                contextlib.redirect_stdout(io.StringIO()):
+            first = report_results(clone, report_out)
+            first_csv = (report_out / 'metrics.csv').read_bytes()
+            second = report_results(clone, report_out)
+            explain_features(clone, features_out)
+        pd.testing.assert_frame_equal(first, second)
+        self.assertEqual(first_csv, (report_out / 'metrics.csv').read_bytes())
+        self.assertEqual(before, {str(p): sha256(p) for p in clone.rglob('*') if p.is_file()})
+        self.assertTrue((report_out / 'validation_cases.csv').is_file())
+        self.assertTrue((features_out / 'active_features.csv').is_file())
+
 
 if __name__ == '__main__':
     unittest.main()

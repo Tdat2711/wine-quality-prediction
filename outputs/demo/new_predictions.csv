@@ -1,0 +1,3 @@
+﻿price,country,variety,vintage_year,province,description,points_predicted,prediction_outside_train_target_range
+30.0,France,Chardonnay,2014.0,Burgundy,Fresh citrus and mineral notes with a long elegant finish.,88.61842317980246,False
+,Italy,Red Blend,,Tuscany,Ripe cherry fruit and smooth tannins with a spicy finish.,85.55280071800304,False

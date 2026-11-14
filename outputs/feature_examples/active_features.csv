@@ -1,0 +1,124 @@
+example,feature_name,value
+0,numeric__log_price,-1.020688028088954
+0,numeric__vintage_year,0.6573290137403646
+0,category__country_US,1.0
+0,category__province_Oregon,1.0
+0,category__variety_Pinot Gris,1.0
+0,description__acidity,0.08889527909831571
+0,description__all,0.14757311292972364
+0,description__and,0.06452894280381397
+0,description__crisp,0.12598268214968392
+0,description__crisp acidity,0.19765287777034776
+0,description__dominate,0.21516786801526996
+0,description__fermented,0.2067197187293969
+0,description__flavors,0.11063985083703012
+0,description__flavors of,0.11555194623756629
+0,description__flavors the,0.1965584466347752
+0,description__flesh,0.2381700750882431
+0,description__green,0.1367781679164467
+0,description__lime,0.1555571027547035
+0,description__of,0.047223047474951145
+0,description__of lime,0.22951531265265918
+0,description__pineapple,0.1688644551653648
+0,description__rind,0.21686876075348938
+0,description__snappy,0.23483790377972202
+0,description__some,0.13970638784244982
+0,description__stainless,0.23143435875869478
+0,description__stainless steel,0.23646690459917352
+0,description__steel,0.2246416753109657
+0,description__tart,0.14920063669272757
+0,description__tart and,0.22792302143214072
+0,description__the,0.09538613676932534
+0,description__the flavors,0.2949374753171131
+0,description__the wine,0.11954756680116863
+0,description__through,0.12989560813428422
+0,description__was,0.1943975040185446
+0,description__wine,0.06458243354192908
+0,description__with,0.053005158705844796
+0,description__with crisp,0.21686876075348938
+1,numeric__log_price,-1.1288502873475856
+1,numeric__vintage_year,0.6573290137403646
+1,category__country_US,1.0
+1,category__province_Michigan,1.0
+1,category__variety_Riesling,1.0
+1,description__and,0.05847124476101026
+1,description__and mango,0.22628407147448776
+1,description__and orange,0.191397011601306
+1,description__aromas,0.07424436247590487
+1,description__aromas the,0.19176056476377432
+1,description__astringent,0.18878795476803767
+1,description__bit,0.13746503353267878
+1,description__blossom,0.18428727430620373
+1,description__finish,0.07751458910513853
+1,description__giving,0.17789327099557026
+1,description__guava,0.2247991184349387
+1,description__honey,0.15210657656435483
+1,description__is,0.05517980478396654
+1,description__is bit,0.21287740870105773
+1,description__lemon,0.12501154733083916
+1,description__mango,0.19063716815449133
+1,description__more,0.12227398589000799
+1,description__notes,0.10031934979224585
+1,description__notes of,0.12790627950598765
+1,description__of,0.04278995203227592
+1,description__of honey,0.19930251932066184
+1,description__off,0.15237715945118688
+1,description__opulent,0.19249958056745342
+1,description__orange,0.14030697357081232
+1,description__orange blossom,0.2294646217993773
+1,description__palate,0.07516414080467117
+1,description__palate is,0.13351405136591324
+1,description__pineapple,0.15301219050539142
+1,description__pith,0.20909330105458873
+1,description__rind,0.1965100595183588
+1,description__slightly,0.14268168840974146
+1,description__start,0.20624525624107534
+1,description__the,0.0697325503929239
+1,description__the aromas,0.18028209635164671
+1,description__the palate,0.09115672142947023
+1,description__to,0.06914367246626327
+1,description__way,0.16643886375456718
+1,description__way to,0.21851748795918902
+1,description__with,0.04802926367023114
+1,description__with notes,0.1744339249513491
+2,numeric__log_price,1.302069251328221
+2,numeric__vintage_year,0.37714728812353077
+2,category__country_US,1.0
+2,category__province_Oregon,1.0
+2,category__variety_Pinot Noir,1.0
+2,description__2012,0.2155238800166171
+2,description__across,0.19312910874947659
+2,description__and,0.034977361055125354
+2,description__and tannic,0.19163790349149498
+2,description__as,0.19410438823919068
+2,description__bottling,0.15572217555600323
+2,description__bottling from,0.21425671838817728
+2,description__characteristics,0.22577673171192478
+2,description__comes,0.1625387980048387
+2,description__earthy,0.1451169010369779
+2,description__from,0.08718042492424873
+2,description__good,0.12517406021883948
+2,description__hearty,0.21019407285405375
+2,description__herbal,0.14005090113900975
+2,description__if,0.17754452611268962
+2,description__if you,0.20924931403351005
+2,description__it,0.09812212863602593
+2,description__it good,0.22842856142467124
+2,description__like,0.12993023632300255
+2,description__like the,0.2350414736367318
+2,description__much,0.1643125996490305
+2,description__of,0.04333923210095191
+2,description__pleasantly,0.22331510452134934
+2,description__rather,0.17390123368245441
+2,description__regular,0.23384705118145094
+2,description__rough,0.2096821287964278
+2,description__rustic,0.1906229670420847
+2,description__tannic,0.13832744325683252
+2,description__tannic with,0.22636168935529688
+2,description__the,0.04171384759050716
+2,description__this,0.04381563573022631
+2,description__to,0.07003124628574621
+2,description__wine,0.05927091169629903
+2,description__wine it,0.1588953821446257
+2,description__with,0.04864579900140754
+2,description__you,0.14720544024175566

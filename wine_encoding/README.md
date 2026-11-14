@@ -89,4 +89,16 @@ Lệnh chỉ load model và đánh giá, không fit/tuning; xuất vào `model_c
 
 ## Giới hạn
 
-Mô hình cần review đã tồn tại và ước lượng điểm của người đánh giá, không đo chất lượng khách quan trước review. Chưa có đối chứng để kết luận phần cải thiện riêng do review. Hệ số không thể hiện nhân quả; cần xem số mẫu khi đọc sai số theo nhóm. Chưa thực hiện kiểm định thống kê chính thức.
+Mô hình cần review đã tồn tại và ước lượng điểm của người đánh giá, không đo chất lượng khách quan trước review. Chưa có đối chứng để kết luận phần cải thiện riêng do review. Hệ số không thể hiện nhân quả; cần xem số mẫu khi đọc sai số theo nhóm. Đã bổ sung thống kê khám phá giá–điểm trên train trong [báo cáo riêng](../outputs/analysis/REPORT.md); đây không phải kiểm định đăng ký trước hoặc bằng chứng nhân quả.
+
+## Báo cáo và demo từ artifact đã lưu
+
+Không cần prepare/train/evaluate_test để sinh lại báo cáo. Các lệnh này chỉ đọc artifact, xuất vào thư mục báo cáo riêng:
+
+```powershell
+python -m wine_encoding.src.report_results
+python -m wine_encoding.src.explain_features
+python -m wine_encoding.src.predict --input wine_encoding/examples/new_wines.csv --output outputs/demo/new_predictions.csv
+```
+
+[Báo cáo bổ sung](../outputs/model_report/REPORT.md) có metric, tỷ lệ sai số trong ngưỡng cố định và ví dụ validation. [Minh họa đặc trưng](../outputs/feature_examples/REPORT.md) dùng ba dòng train và probe tổng hợp, không fit encoder hoặc densify toàn ma trận. [Hướng dẫn demo](../docs/DEMO.md) giải thích đầu vào, nhãn mới và giá/review thiếu.

@@ -2,7 +2,7 @@ Issue,Column,How_detected,Decision,Action,Rows_affected,Reason,Person
 "Cột chỉ mục CSV không có tên","Unnamed: 0","Tên cột và dãy số duy nhất 0–129970","Đã xử lý","Xóa khỏi bản cleaned; giữ nguyên trong raw",129971,"Đây là chỉ mục xuất kèm CSV, không phải đặc trưng phân tích","Đạt"
 "Giá trị thiếu","country","df.isna().sum()","Đã xử lý","Gắn Unknown cho cả 63 ô",63,"Không học ánh xạ winery-country trên toàn bộ dữ liệu trước split","Dương"
 "Giá trị thiếu","designation","df.isna().sum()","Đã xử lý","Gắn Not specified",37465,"Trường tùy chọn, không thể suy luận đáng tin cậy","Dương"
-"Giá trị thiếu","price","df.isna().sum()","Giữ thiếu có chủ đích","8.996 giá thiếu ở raw; còn 8.395 sau loại duplicate; mẫu chính dùng 111.593 giá quan sát",8996,"Không dùng giá ước tính trong thí nghiệm chỉ giá; giữ dòng thiếu cho audit","Dương"
+"Giá trị thiếu","price","df.isna().sum()","Giữ thiếu có chủ đích","8.996 giá thiếu ở raw; còn 8.395 sau loại duplicate; mẫu chính dùng 111.593 giá quan sát",8996,"Không dùng giá ước tính trong thí nghiệm kết hợp hiện tại; giữ dòng thiếu cho audit","Dương"
 "Giá trị thiếu","province","df.isna().sum()","Đã xử lý","Gắn Unknown cho cả 63 ô",63,"Không học ánh xạ winery-province trên toàn bộ dữ liệu trước split","Dương"
 "Giá trị thiếu","region_1","df.isna().sum()","Đã xử lý","Gắn Unknown",21247,"Không đủ căn cứ suy luận vùng chi tiết","Dương"
 "Giá trị thiếu","region_2","df.isna().sum() và country","Đã xử lý","Not applicable 75404; Unknown 4056",79460,"Phân biệt thiếu cấu trúc và thiếu chưa rõ","Dương"

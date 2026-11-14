@@ -1,6 +1,6 @@
 # Cấu trúc và quy trình repository
 
-Repository tổ chức theo chức năng, dùng chung một pipeline cleaning, một bộ split và một notebook EDA chính. Không có phân công theo thành viên hoặc lịch tuần học.
+Repository tổ chức theo chức năng, dùng chung một pipeline cleaning, một bộ split và một notebook EDA chính. Không tổ chức thư mục theo cá nhân; phân công nội dung tham khảo trong [hướng dẫn nghiên cứu](RESEARCH_GUIDE.md).
 
 ## Thư mục và trách nhiệm
 
@@ -51,4 +51,15 @@ python -m wine_encoding.src.predict --input wine_encoding/examples/new_wines.csv
 
 Đường dẫn config tính từ file config; đường dẫn CLI tính từ thư mục chạy. Sai input báo lỗi. Artifact schema v2 có checksum nguồn/split; model product cũ không tự thay thế combined. Xem [hướng dẫn đầy đủ](../wine_encoding/README.md).
 
-Giữ mọi dòng trong split và lịch sử holdout từng được quan sát. Báo ảnh hưởng review trùng, chưa kiểm tra near-duplicate; không tuyên bố zero leakage. Lệnh `evaluate_test` tách riêng chỉ dùng sau khi khóa mô hình, chưa chạy trong đợt này. Không sửa raw/cleaned hoặc đổi seed để chọn kết quả thuận lợi.
+Giữ mọi dòng trong split và lịch sử holdout từng được quan sát. Báo ảnh hưởng review trùng, chưa kiểm tra near-duplicate; không tuyên bố zero leakage. Test đã được đánh giá ngày 13/11/2026; `evaluate_test` là lệnh riêng, không chạy lại để sinh báo cáo bổ sung. Không sửa raw/cleaned hoặc đổi seed để chọn kết quả thuận lợi.
+
+## Báo cáo phân tích bổ sung, không fit lại
+
+| Lệnh | Đầu ra | Phạm vi |
+|---|---|---|
+| `python -m src.cleaning_report` | `outputs/cleaning_report/` | Audit lịch sử, tái tạo cleaning trong bộ nhớ |
+| `python -m src.analyze_associations` | `outputs/analysis/` | Train, trung vị nhóm title |
+| `python -m wine_encoding.src.report_results` | `outputs/model_report/` | Dự đoán validation/test đã lưu |
+| `python -m wine_encoding.src.explain_features` | `outputs/feature_examples/` | Ba dòng train và encoder đã lưu |
+
+Các công cụ hỗ trợ `--output-dir`, chặn thư mục data và artifact mô hình. Mỗi đầu ra có bảng CSV nguồn, Markdown và summary.json ghi provenance. EDA tạo thêm QUESTION_MAP.md và báo cáo từ bảng. [Hướng dẫn nghiên cứu](RESEARCH_GUIDE.md) và [demo](DEMO.md) là lộ trình đọc/chạy.

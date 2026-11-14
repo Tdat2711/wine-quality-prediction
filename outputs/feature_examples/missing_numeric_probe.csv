@@ -1,0 +1,3 @@
+feature,raw_missing,imputed_train_median,scaled
+log_price,True,3.258096538021482,-0.15836336735389875
+vintage_year,True,2011.0,0.09696556250669701
