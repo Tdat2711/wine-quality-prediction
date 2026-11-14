@@ -6,12 +6,17 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import sys
 
-from clean_consistency import enforce_consistency
-from clean_duplicates import find_possible_logical_duplicates, remove_duplicates
-from handle_missing_values import handle_missing_values
-from handle_outliers_and_noise import process_dataset
-from validate_cleaned_data import sha256_file, validate_cleaned_dataset
+if str(Path(__file__).resolve().parents[1]) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from src.clean_consistency import enforce_consistency
+from src.clean_duplicates import find_possible_logical_duplicates, remove_duplicates
+from src.handle_missing_values import handle_missing_values
+from src.handle_outliers_and_noise import process_dataset
+from src.validate_cleaned_data import sha256_file, validate_cleaned_dataset
+from src.cleaning_report import snapshot, write_report
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -48,20 +53,27 @@ def run_cleaning_stage() -> pd.DataFrame:
     raw = pd.read_csv(RAW_DATA_PATH)
     df = raw.copy(deep=True)
     overall_report: dict[str, Any] = {}
+    stages = [snapshot(df, 'raw')]
 
     print(f"Dataset gốc: {df.shape}")
 
+    before = df
     df, report = handle_missing_values(df)
+    stages.append(snapshot(df, 'missing', before))
     overall_report["missing"] = report
     df.to_csv(INTERIM_MISSING_PATH, index=False)
     print(f"[1/4] Missing values: {df.shape}")
 
+    before = df
     df, report = enforce_consistency(df)
+    stages.append(snapshot(df, 'consistency', before))
     overall_report["consistency"] = report
     df.to_csv(INTERIM_CONSISTENCY_PATH, index=False)
     print(f"[2/4] Consistency: {df.shape}")
 
+    before = df
     df, report = remove_duplicates(df)
+    stages.append(snapshot(df, 'duplicates', before))
     overall_report["duplicates"] = report
     candidates = find_possible_logical_duplicates(df)
     candidates.to_csv(POSSIBLE_DUPLICATES_PATH, index=False)
@@ -69,7 +81,9 @@ def run_cleaning_stage() -> pd.DataFrame:
     print(f"[3/4] Exact duplicates: {df.shape}")
     print(f"      Possible logical duplicates: {POSSIBLE_DUPLICATES_PATH}")
 
+    before = df
     df, report = process_dataset(df)
+    stages.append(snapshot(df, 'outliers_noise', before))
     overall_report["outliers_and_noise"] = report
     df.to_csv(INTERIM_OUTLIERS_PATH, index=False)
     print(f"[4/4] Outliers and noise: {df.shape}")
@@ -80,6 +94,7 @@ def run_cleaning_stage() -> pd.DataFrame:
 
     validation = validate_cleaned_dataset(raw, df, raw_hash_after)
     df.to_csv(CLEANED_DATA_PATH, index=False)
+    write_report(pd.DataFrame(stages), overall_report, RAW_DATA_PATH, CLEANED_DATA_PATH)
 
     print(f"Hoàn tất cleaning: {df.shape}")
     print(

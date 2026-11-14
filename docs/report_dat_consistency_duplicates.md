@@ -1,5 +1,7 @@
 # Báo Cáo Nhiệm Vụ Tiền Xử Lý Dữ Liệu: Nhất Quán & Trùng Lặp
 
+> Tài liệu audit/quyết định cleaning lịch sử. Trạng thái và số liệu đối chiếu hiện hành: [bằng chứng cleaning](../outputs/cleaning_report/REPORT.md), [EDA train](eda_report.md), [đánh giá test](model_test_report.md). Không dùng audit toàn mẫu để chọn lại mô hình.
+
 **Người thực hiện:** Nguyễn Khắc Tuấn Đạt  
 **Giai đoạn:** Data Cleaning (Bước 2 & Bước 3 trong Pipeline)  
 **Tập dữ liệu:** Wine Reviews (`winemag-data-130k-v2.csv`)

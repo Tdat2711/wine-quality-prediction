@@ -1,0 +1,2 @@
+groups,bootstrap_repetitions,seed,status,rho,p_value_approx,ci_low,ci_high,valid_bootstrap
+77437,2000,42,ok,0.6157651448603431,0.0,0.6110206411877455,0.6202161585632493,2000

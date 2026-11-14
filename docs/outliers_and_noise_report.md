@@ -1,5 +1,7 @@
 # Báo cáo Outlier & Noise — Wine Reviews 130k
 
+> Tài liệu audit/quyết định cleaning lịch sử. Trạng thái và số liệu đối chiếu hiện hành: [bằng chứng cleaning](../outputs/cleaning_report/REPORT.md), [EDA train](eda_report.md), [đánh giá test](model_test_report.md). Không dùng audit toàn mẫu để chọn lại mô hình.
+
 **Phạm vi**: Bước 4 của pipeline cleaning, chạy sau missing values, consistency và exact duplicates.
 
 **Đầu vào**: `data/interim/03_duplicates_handled.csv` — 119.988 dòng × 13 cột.
@@ -55,7 +57,7 @@ Hai trường hợp có dấu hiệu mạnh của lỗi nhập liệu. Giá sau 
 ## 5. Xử lý noise và transformation
 
 - Giải mã HTML entities, thay non-breaking space và loại khoảng trắng đầu/cuối trong `description` và `title`.
-- Gắn cờ 39 review dưới 10 từ bằng `is_non_informative_review`; không xóa dòng vì metadata vẫn có thể hữu ích.
+- Gắn cờ 39 review có độ dài dưới 10 từ bằng tên cột lịch sử `is_non_informative_review`; không xóa dòng vì metadata vẫn có thể hữu ích.
 - Trích xuất 115.660 giá trị `vintage_year`; tiêu đề NV/Non-Vintage và năm không đủ tin cậy được để thiếu.
 - Tạo `log_price = log1p(price)` cho giá quan sát; giá thiếu vẫn thiếu. Skewness trên các giá quan sát giảm từ khoảng 17,96 xuống 0,66 mà không xóa rượu cao cấp.
 

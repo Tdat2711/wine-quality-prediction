@@ -1,0 +1,27 @@
+{
+  "tool_version": "1.0",
+  "generated_at": "2026-11-14T10:09:36.200947+00:00",
+  "scope": "first three train rows; saved encoder; no fit",
+  "seed": null,
+  "python": "3.13.9",
+  "packages": {
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "matplotlib": "3.11.2",
+    "joblib": "1.6.0"
+  },
+  "inputs": {
+    "C:\\Users\\pnvto\\Data Science\\wine-quality-prediction\\wine_encoding\\outputs\\model_combined\\ridge_combined.joblib": "612954498d9a071e1dfb2abc7b5bb484759f7a234c89ba58c51d192b4873ea22",
+    "C:\\Users\\pnvto\\Data Science\\wine-quality-prediction\\wine_encoding\\outputs\\report.json": "ac8377880bf25e8d5bfadebbc892ebd47600ab3970b89bb832fb5c9fcb308538",
+    "C:\\Users\\pnvto\\Data Science\\wine-quality-prediction\\data\\processed\\splits\\train.csv": "25e9690c1878ffb739326bd7bfde295d46090061849f2a199e0c3cde20d798ef"
+  },
+  "dimensions": {
+    "rows": 3,
+    "features": 3332,
+    "nonzero": 123,
+    "unknown_category_nonzero": 3,
+    "empty_review_nonzero": 0
+  }
+}

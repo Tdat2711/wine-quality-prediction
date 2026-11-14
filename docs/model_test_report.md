@@ -2,6 +2,8 @@
 
 Ngày đánh giá: **13/11/2026**. Dùng pipeline metadata + TF-IDF review → Ridge đã lưu, **alpha = 1**, fit trên train. Chỉ load và dự đoán; không fit lại, không tuning, không thay đổi preprocessing hoặc split.
 
+Xem thêm [báo cáo bổ sung](../outputs/model_report/REPORT.md): tỷ lệ sai số trong ±1/2/3 điểm, biểu đồ theo nhóm và ví dụ validation. Đây là mô tả sau đánh giá, không dùng chọn lại mô hình. Thống kê giá–điểm khám phá nằm riêng ở [báo cáo thống kê](../outputs/analysis/REPORT.md).
+
 ## Kết quả
 
 | Mô hình / mẫu | n | MAE | RMSE | R² |

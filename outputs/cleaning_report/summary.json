@@ -1,0 +1,144 @@
+{
+  "tool_version": "1.0",
+  "generated_at": "2026-11-14T10:04:43.251891+00:00",
+  "scope": "historical full-data cleaning audit; not train EDA",
+  "seed": null,
+  "python": "3.13.9",
+  "packages": {
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "matplotlib": "3.11.2",
+    "joblib": "1.6.0"
+  },
+  "inputs": {
+    "C:\\Users\\pnvto\\Data Science\\wine-quality-prediction\\data\\raw\\winemag-data-130k-v2.csv": "52af2643c8ac29f010f0cc629dfbdda1c74aa0f332d11762af9ef3de4e567ac9",
+    "C:\\Users\\pnvto\\Data Science\\wine-quality-prediction\\data\\processed\\wine_cleaned_final.csv": "e84affec87e91e1e0c0175b1cefafe6ff31373ff15180ecded34739ef43c0461"
+  },
+  "actions": {
+    "missing": {
+      "country_set_unknown": 63,
+      "province_set_unknown": 63,
+      "designation_set_not_specified": 37465,
+      "price_left_missing": 8996,
+      "region_1_set_unknown": 21247,
+      "region_2_set_not_applicable": 75404,
+      "region_2_set_unknown": 4056,
+      "taster_name_set_unknown": 26244,
+      "twitter_handle_set_not_provided": 31213,
+      "variety_inferred_from_description": 1,
+      "variety_set_unknown": 0
+    },
+    "consistency": {
+      "formatted_text_columns": 11,
+      "country_values_standardized": 0,
+      "twitter_handles_fixed": 0
+    },
+    "duplicates": {
+      "system_index_columns_removed": 1,
+      "exact_duplicates_removed": 9983,
+      "possible_logical_duplicate_rows": 66,
+      "possible_logical_duplicate_groups": 33
+    },
+    "outliers_noise": {
+      "price_stats_before": {
+        "valid_count": 111593,
+        "missing_count": 8395,
+        "mean": 35.62074682103716,
+        "median": 25.0,
+        "q1": 17.0,
+        "q3": 42.0,
+        "iqr": 25.0,
+        "mild_threshold": 79.5,
+        "extreme_threshold": 117.0,
+        "mild_outliers_count": 6869,
+        "mild_outliers_pct": 6.1554040127965015,
+        "extreme_outliers_count": 2574,
+        "extreme_outliers_pct": 2.3065962918821072,
+        "over_500_count": 91,
+        "over_1000_count": 14,
+        "skewness_raw": 17.959964819287006
+      },
+      "short_reviews_flagged": 39,
+      "vintages_extracted": 115660,
+      "corrections": {
+        "blair_2013": 1,
+        "chateau_ormes_sorbet": 1
+      },
+      "skewness_after_log": 0.6586950845173741
+    }
+  },
+  "stages": [
+    {
+      "stage": "raw",
+      "rows": 129971,
+      "columns": 14,
+      "missing_cells": 204752,
+      "missing_price": 8996,
+      "exact_duplicate_rows_excluding_export_index": 9983,
+      "placeholder_cells": 0,
+      "removed_rows": 0,
+      "changed_cells_existing_columns": 0.0,
+      "added_columns": 0,
+      "short_review_flags": 0,
+      "price_correction_flags": 0
+    },
+    {
+      "stage": "missing",
+      "rows": 129971,
+      "columns": 14,
+      "missing_cells": 8996,
+      "missing_price": 8996,
+      "exact_duplicate_rows_excluding_export_index": 9983,
+      "placeholder_cells": 195755,
+      "removed_rows": 0,
+      "changed_cells_existing_columns": 195756.0,
+      "added_columns": 0,
+      "short_review_flags": 0,
+      "price_correction_flags": 0
+    },
+    {
+      "stage": "consistency",
+      "rows": 129971,
+      "columns": 14,
+      "missing_cells": 8996,
+      "missing_price": 8996,
+      "exact_duplicate_rows_excluding_export_index": 9983,
+      "placeholder_cells": 195755,
+      "removed_rows": 0,
+      "changed_cells_existing_columns": 42992.0,
+      "added_columns": 0,
+      "short_review_flags": 0,
+      "price_correction_flags": 0
+    },
+    {
+      "stage": "duplicates",
+      "rows": 119988,
+      "columns": 13,
+      "missing_cells": 8395,
+      "missing_price": 8395,
+      "exact_duplicate_rows_excluding_export_index": 0,
+      "placeholder_cells": 181805,
+      "removed_rows": 9983,
+      "changed_cells_existing_columns": null,
+      "added_columns": 0,
+      "short_review_flags": 0,
+      "price_correction_flags": 0
+    },
+    {
+      "stage": "outliers_noise",
+      "rows": 119988,
+      "columns": 19,
+      "missing_cells": 29513,
+      "missing_price": 8395,
+      "exact_duplicate_rows_excluding_export_index": 0,
+      "placeholder_cells": 181805,
+      "removed_rows": 0,
+      "changed_cells_existing_columns": 2.0,
+      "added_columns": 6,
+      "short_review_flags": 39,
+      "price_correction_flags": 2
+    }
+  ]
+}

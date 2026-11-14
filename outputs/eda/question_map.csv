@@ -1,0 +1,5 @@
+question,evidence,finding,decision_or_implication,limit
+Giá liên hệ với điểm thế nào?,price_tiers.csv; 02/03/08 figures,Trung vị điểm: 86 → 88 → 89 → 91,Giữ đuôi giá cao; log để biểu diễn giá lệch phải,Không chứng minh nhân quả hoặc lợi ích dự đoán riêng của log
+Các nhóm metadata khác nhau ra sao?,groups_*.csv; 04/07 figures,"Quy mô, giá và điểm không đồng nhất; đọc Q1–Q3 cùng trung bình","Cùng nhóm ≥100 dòng, tối đa 10 nhóm đông nhất","Không xếp hạng chất lượng, chưa kiểm định nhóm"
+Review có đặc điểm gì?,review_summary.csv; content_unigrams.csv; 05/06/09/10 figures,Trung vị 40 từ,Giữ review ngắn; từ vựng lọc chỉ là mô tả bổ sung,"Không phải sentiment, ảnh hưởng hoặc quan hệ nhân quả"
+Mô hình dự đoán tốt đến đâu?,../model_report/REPORT.md; metrics.csv,Xem báo cáo riêng từ dự đoán validation/test đã lưu,"So baseline, ngưỡng sai số, nhóm điểm và trường hợp",Cần review đã có; holdout từng quan sát; chưa có metadata-only

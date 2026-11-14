@@ -3,12 +3,12 @@
 This module addresses:
 1. Outliers in `price`:
    - Distinguishes valid luxury wines (natural outliers) from data entry errors.
-   - Corrects verified data entry errors (Blair 2013 and Chateau les Ormes Sorbet).
+   - Applies two assumed price corrections with original values preserved.
    - Records which prices were missing and generates `log_price` only for
      observed prices; missing prices are excluded from the main experiment.
 2. Noise in text and metadata:
    - Cleans HTML entities (&amp;, &eacute;, etc.) and non-breaking spaces (\xa0).
-   - Flags non-informative reviews (< 10 words, e.g. importer notes).
+   - Flags review length < 10 words; the flag does not establish usefulness.
    - Extracts clean vintage years while ignoring brand foundation years for Non-Vintage (NV) wines.
 """
 
@@ -98,7 +98,7 @@ def extract_clean_vintage(title: Any) -> float:
 
 
 def correct_data_entry_errors(df: pd.DataFrame) -> dict[str, int]:
-    """Correct verified typos and field misplacements in price."""
+    """Apply historical assumed price corrections; not verified market prices."""
     changes = {"blair_2013": 0, "chateau_ormes_sorbet": 0}
 
     # Case 1: Blair 2013 Chardonnay mistakenly typed vintage 2013 as price
@@ -135,7 +135,7 @@ def process_dataset(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Any]]:
         if col in result.columns:
             result[col] = result[col].apply(clean_text_noise)
 
-    # 3. Flag non-informative short reviews (< 10 words)
+    # 3. Historical column name: a length flag, not evidence of usefulness.
     if "description" in result.columns:
         result["is_non_informative_review"] = result["description"].apply(
             lambda x: len(x.split()) < 10
@@ -149,7 +149,7 @@ def process_dataset(df: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Any]]:
         result["vintage_year"] = result["title"].apply(extract_clean_vintage)
         stats["vintages_extracted"] = int(result["vintage_year"].notna().sum())
 
-    # 5. Preserve original prices and audit verified corrections.
+    # 5. Preserve original prices and audit assumed corrections.
     result["price_was_missing"] = result["price"].isna()
     result["price_original"] = result["price"]
     stats["corrections"] = correct_data_entry_errors(result)

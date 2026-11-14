@@ -1,0 +1,29 @@
+{
+  "tool_version": "1.0",
+  "generated_at": "2026-11-14T09:58:50.619565+00:00",
+  "scope": "train; median price and points per normalized title",
+  "seed": 42,
+  "python": "3.13.9",
+  "packages": {
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "matplotlib": "3.11.2",
+    "joblib": "1.6.0"
+  },
+  "inputs": {
+    "C:\\Users\\pnvto\\Data Science\\wine-quality-prediction\\data\\processed\\splits\\train.csv": "25e9690c1878ffb739326bd7bfde295d46090061849f2a199e0c3cde20d798ef"
+  },
+  "result": {
+    "groups": 77437,
+    "bootstrap_repetitions": 2000,
+    "seed": 42,
+    "status": "ok",
+    "rho": 0.6157651448603431,
+    "p_value_approx": 0.0,
+    "ci_low": 0.6110206411877455,
+    "ci_high": 0.6202161585632493,
+    "valid_bootstrap": 2000
+  }
+}

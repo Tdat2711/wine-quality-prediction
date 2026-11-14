@@ -52,7 +52,10 @@ class EdaPlotTests(unittest.TestCase):
         with patch.object(Path, "mkdir"), patch.object(pd.DataFrame, "to_csv"), \
                 patch.object(pd, "read_csv", side_effect=read_csv), \
                 patch.object(plots, "build_eda_tables", return_value={}), \
-                patch.object(plots, "create_eda_figures", return_value={}):
+                patch.object(plots, "create_eda_figures", return_value={}), \
+                patch.object(plots, 'write_eda_report'), \
+                patch('src.reporting.metadata', return_value={}), \
+                patch('src.reporting.write_json'):
             plots.run_eda("unused_output")
         self.assertEqual(heldout_reads, [["description"], ["description"]])
 

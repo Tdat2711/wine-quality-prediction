@@ -1,5 +1,7 @@
 # Báo cáo xử lý missing values
 
+> Tài liệu audit/quyết định cleaning lịch sử. Trạng thái và số liệu đối chiếu hiện hành: [bằng chứng cleaning](../outputs/cleaning_report/REPORT.md), [EDA train](eda_report.md), [đánh giá test](model_test_report.md). Không dùng audit toàn mẫu để chọn lại mô hình.
+
 ## Phạm vi
 
 - Nguồn: `data/raw/winemag-data-130k-v2.csv`.

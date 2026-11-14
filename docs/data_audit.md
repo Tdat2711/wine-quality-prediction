@@ -1,5 +1,7 @@
 # Báo cáo audit ban đầu — Wine Reviews 130k
 
+> Tài liệu audit/quyết định cleaning lịch sử. Trạng thái và số liệu đối chiếu hiện hành: [bằng chứng cleaning](../outputs/cleaning_report/REPORT.md), [EDA train](eda_report.md), [đánh giá test](model_test_report.md). Không dùng audit toàn mẫu để chọn lại mô hình.
+
 ## Phạm vi
 
 Báo cáo được tạo từ `data/raw/winemag-data-130k-v2.csv`. Đây là bước kiểm tra trước khi chia nhiệm vụ làm sạch; không có dữ liệu nào bị sửa hoặc xóa.

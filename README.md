@@ -1,6 +1,8 @@
 # Phân tích và dự đoán điểm review rượu từ thông tin sản phẩm và văn bản
 
-Dự án sử dụng **Wine Reviews 130k** để tìm hiểu quan hệ giữa giá, đặc điểm sản phẩm, nội dung đánh giá và điểm review `points`. Mô hình chính là **kết hợp thông tin sản phẩm đã mã hóa với vector TF-IDF của review, rồi dùng Ridge để dự đoán điểm**.
+Dự án sử dụng **Wine Reviews 130k**, lấy **phân tích dữ liệu làm trọng tâm**: tìm hiểu giá, xuất xứ, giống nho và nội dung review liên hệ với điểm `points` như thế nào. Mục tiêu bổ trợ là đánh giá khả năng ước lượng điểm bằng **metadata + TF-IDF review → Ridge** đã khóa; không mở rộng thuật toán hoặc tuning theo test.
+
+**Đọc kết quả:** [Hướng dẫn nghiên cứu](docs/RESEARCH_GUIDE.md) → [bảng câu hỏi–bằng chứng](outputs/eda/QUESTION_MAP.md) → [EDA](outputs/eda/REPORT.md) → [thống kê giá–điểm](outputs/analysis/REPORT.md) → [đánh giá mô hình](outputs/model_report/REPORT.md).
 
 Đơn vị quan sát là **một bản ghi review**, không mặc định là một chai rượu duy nhất. Một tên rượu có thể có nhiều review. `points` là đánh giá của người chấm, không phải phép đo chất lượng khách quan.
 
@@ -8,7 +10,9 @@ Dự án sử dụng **Wine Reviews 130k** để tìm hiểu quan hệ giữa gi
 
 Người mua thường tham khảo giá, xuất xứ, giống nho và lời đánh giá khi lựa chọn rượu. Tuy nhiên, giá cao không bảo đảm mọi review đều cho điểm cao; dữ liệu cũng có sự khác nhau về nhóm sản phẩm và người chấm. Nhóm dùng phân tích dữ liệu để mô tả những liên hệ này và xây dựng một quy trình dự đoán có thể kiểm tra lại.
 
-**Câu hỏi chính:** Kết hợp thông tin sản phẩm và nội dung review dự đoán điểm đánh giá rượu tốt đến đâu?
+**Câu hỏi chính:** Giá, xuất xứ, giống nho và nội dung review có liên hệ như thế nào với điểm đánh giá?
+
+**Câu hỏi bổ trợ:** Mô hình kết hợp hiện có ước lượng điểm tốt đến đâu và còn sai ở những nhóm nào?
 
 Các câu hỏi hỗ trợ:
 
@@ -27,13 +31,13 @@ Một mô hình kết hợp duy nhất **chưa chứng minh review cải thiện
 | Cleaning | Xử lý thiếu, không nhất quán, trùng và lỗi giá có lưu dấu | Dữ liệu sạch, cleaning log |
 | Chọn mẫu và split | Tách dữ liệu theo nhóm tên rượu | CSV train/validation/test, kiểm tra tái lập |
 | EDA | Mô tả giá, điểm, metadata và review | Notebook, bảng CSV, biểu đồ |
-| Kiểm định — dự kiến | Kiểm tra các giả thuyết định trước | Hệ số, độ lớn khác biệt, khoảng tin cậy và giới hạn |
+| Thống kê khám phá | Spearman giá–điểm ở cấp nhóm title trên train | Hệ số, CI bootstrap, p-value xấp xỉ và giới hạn |
 | Preprocessing | Mã hóa sản phẩm và vector hóa review | Bộ xử lý fit trên train |
 | Modeling | Học ánh xạ từ đặc trưng kết hợp sang điểm | Pipeline Ridge + preprocessing |
 | Đánh giá validation | Đo sai số tổng thể và theo nhóm | MAE, RMSE, R², dự đoán và phân tích phần dư |
 | Báo cáo | Kết nối phát hiện với câu hỏi và giới hạn | Báo cáo và phần trình bày có bằng chứng |
 
-Đã triển khai pipeline **metadata + TF-IDF review → Ridge**, chọn alpha bằng CV theo nhóm trên train và báo cáo validation. Đã đánh giá test ngày 13/11/2026 bằng mô hình đã khóa; chưa chạy kiểm định chính thức. Không dùng embedding; web/API không thuộc đầu ra hiện tại.
+Đã triển khai pipeline **metadata + TF-IDF review → Ridge**, chọn alpha bằng CV theo nhóm trên train và báo cáo validation. Đã đánh giá test ngày 13/11/2026 bằng mô hình đã khóa; đã bổ sung thống kê khám phá giá–điểm trên train, không phải kiểm định đăng ký trước. Không dùng embedding; web/API không thuộc đầu ra hiện tại.
 
 ## 3. Dữ liệu và vai trò biến
 
@@ -67,7 +71,7 @@ flowchart TD
     D --> S[Chọn mẫu có giá và points; split theo title]
     D --> Q[Audit số lượng và missing]
     S --> E[EDA chi tiết trên train]
-    E --> I[Kiểm định giả thuyết - dự kiến]
+    E --> I[Thống kê khám phá giá và điểm]
     S --> P[Giá và metadata - preprocessing fit trên train]
     S --> T[Review - TF-IDF fit trên train]
     P --> F[Ghép đặc trưng]
@@ -127,7 +131,7 @@ Báo MAE chính, RMSE và R² phụ, sai số theo nhóm và số mẫu. Validat
 
 Lưu toàn bộ chuẩn bị đầu vào, preprocessing và Ridge trong một pipeline. Suy luận cần review đã tồn tại, không cần `points`. Đây là ước lượng điểm review, không phải dự đoán chất lượng trước khi có review. Không có thí nghiệm đối chứng để kết luận mức cải thiện do thêm review.
 
-Kiểm định thống kê chính thức chưa chạy; các giả thuyết và phương pháp phải được chốt riêng trước khi phân tích.
+Đã bổ sung Spearman giá–điểm ở cấp nhóm title train, p-value hai phía xấp xỉ và CI95% từ 2.000 bootstrap nhóm (seed 42). Đây là phân tích sau EDA, chưa kiểm soát nhiễu hoặc bảo đảm độc lập giữa các nhóm; xem [báo cáo thống kê](outputs/analysis/REPORT.md). Không coi là kiểm định đăng ký trước.
 
 ## 5. Cấu trúc repository
 
@@ -191,13 +195,24 @@ python src/split_data.py --write
 python src/create_eda_plots.py
 ```
 
-**Bước 4 — Xem notebook:** chọn kernel `.venv`, Restart Kernel và Run All. Thứ tự: tìm hiểu dữ liệu → audit outlier/noise → kiểm tra split → EDA. Notebook outlier là nghiên cứu quyết định cleaning đã có, không phải bước cleaning riêng cần ghép thêm vào pipeline.
+**Bước 4 — Sinh các báo cáo bổ sung từ dữ liệu/artifact hiện có:**
+
+```powershell
+python -m src.cleaning_report
+python -m src.analyze_associations
+python -m wine_encoding.src.report_results
+python -m wine_encoding.src.explain_features
+```
+
+`cleaning_report` chỉ tái tạo trong bộ nhớ và đối chiếu cleaned; không ghi lại dữ liệu. Ba lệnh còn lại không fit mô hình. Các lệnh hỗ trợ `--output-dir`, xuất vào `outputs/cleaning_report`, `analysis`, `model_report`, `feature_examples`. Mỗi báo cáo có checksum, phạm vi và phiên bản. Chạy các bước này trước notebook EDA.
+
+**Bước 5 — Xem notebook:** chọn kernel `.venv`, Restart Kernel và Run All. Thứ tự: tìm hiểu dữ liệu → audit outlier/noise → kiểm tra split → EDA. Notebook outlier là nghiên cứu quyết định cleaning đã có, không phải bước cleaning riêng cần ghép thêm vào pipeline.
 
 ```powershell
 jupyter notebook
 ```
 
-**Bước 5 — Kiểm tra tự động:**
+**Bước 6 — Kiểm tra tự động:**
 
 ```powershell
 python -m unittest discover -s tests -v
@@ -205,7 +220,7 @@ python -m unittest discover -s tests -v
 
 Không cần tải dữ liệu từ mạng khi chạy nếu file raw đã có. Không chạy lại bước cài môi trường để thay đổi môi trường đang hoạt động chỉ nhằm tái tạo hình.
 
-**Bước 6 — Encoding và mô hình kết hợp:**
+**Luồng tái huấn luyện độc lập — chỉ dùng khi chủ động tạo thí nghiệm mới:**
 
 ```powershell
 python -m wine_encoding.src.prepare
@@ -215,7 +230,7 @@ python -m wine_encoding.src.verify_model
 python -m wine_encoding.src.predict --input wine_encoding/examples/new_wines.csv
 ```
 
-Chạy từ repo root. Prepare đối chiếu split đã khóa trước khi xuất; train CV từ dữ liệu chưa mã hóa. Model mới ở `wine_encoding/outputs/model_combined/`, không dùng artifact product cũ thay thế. Xem [hướng dẫn mô hình](wine_encoding/README.md) để biết input, output và lệnh đánh giá test tách riêng.
+Không cần chạy luồng này để xem/sinh lại báo cáo hiện tại. Các lệnh prepare/train ghi lại artifact và yêu cầu quản lý phiên bản thí nghiệm riêng. Chạy từ repo root. Prepare đối chiếu split đã khóa trước khi xuất; train CV từ dữ liệu chưa mã hóa. Model mới ở `wine_encoding/outputs/model_combined/`, không dùng artifact product cũ thay thế. Xem [hướng dẫn mô hình](wine_encoding/README.md) để biết input, output và lệnh đánh giá test tách riêng.
 
 ## 7. Kết quả hiện có và trạng thái
 
@@ -225,7 +240,7 @@ Chạy từ repo root. Prepare đối chiếu split đã khóa trước khi xu�
 | Split | Đã có; tái tạo đúng bộ hiện tại, seed 42 |
 | EDA hướng kết hợp | Đã có notebook, bảng và hình trên train |
 | Review trùng giữa split | Giữ split; báo metric validation tổng thể và không trùng train |
-| Kiểm định chính thức | Chưa thực hiện |
+| Thống kê giá–điểm | Đã bổ sung phân tích khám phá ở cấp nhóm title train; không đăng ký trước |
 | TF-IDF + Ridge kết hợp | Đã triển khai CV theo nhóm, pipeline train và suy luận |
 | MAE, RMSE, R² | Đã có validation và test; test MAE 1,208998, RMSE 1,542601, R² 0,751284 |
 
@@ -236,7 +251,7 @@ Các quan sát mô tả trên **78.106 review train**:
 - Điểm trung vị theo bốn khoảng giá tăng từ **86** đến **91**; chưa suy ra nhân quả.
 - Review dài trung vị **40 từ**; **29** review dưới 10 từ, không có review trống trên train.
 
-Các số EDA trên là mô tả dữ liệu. Kết quả dự đoán được tạo riêng tại `wine_encoding/outputs/model_combined/RESULTS.md`; xem [báo cáo validation đã kiểm chứng](docs/model_validation_report.md) và [đánh giá test cuối](docs/model_test_report.md). Kết quả này không thay thế kiểm định thống kê.
+Các số EDA trên là mô tả dữ liệu. Kết quả dự đoán được tạo riêng tại `wine_encoding/outputs/model_combined/RESULTS.md`; xem [báo cáo validation đã kiểm chứng](docs/model_validation_report.md) và [đánh giá test cuối](docs/model_test_report.md). Kết quả dự đoán và phân tích thống kê khám phá trả lời các câu hỏi khác nhau; không suy luận nhân quả.
 
 ## 8. Giới hạn và sử dụng kết quả
 
@@ -254,5 +269,7 @@ Các số EDA trên là mô tả dữ liệu. Kết quả dự đoán được t
 - [Missing values](docs/missing_values_report.md), [consistency và duplicate](docs/report_dat_consistency_duplicates.md).
 - [Outlier và noise](docs/outliers_and_noise_report.md), [cleaning log](docs/cleaning_log.csv).
 - [Báo cáo split](docs/data_split_report.md), [báo cáo EDA](docs/eda_report.md).
+- [Bằng chứng cleaning](outputs/cleaning_report/REPORT.md), [thống kê](outputs/analysis/REPORT.md), [sai số bổ sung](outputs/model_report/REPORT.md), [đặc trưng](outputs/feature_examples/REPORT.md).
+- [Môi trường đã kiểm chứng](requirements-reproducible.txt), [hướng dẫn demo](docs/DEMO.md).
 
 Raw data bất biến; biến đổi bằng code, không sửa CSV thủ công. Giữ seed và quy tắc chia nhóm, kiểm tra bản ghi và preprocessing, chạy notebook từ kernel mới. Mọi con số trong báo cáo phải truy ngược được tới bảng, hình và code; không ghi kết quả dự kiến như kết quả đã đạt.

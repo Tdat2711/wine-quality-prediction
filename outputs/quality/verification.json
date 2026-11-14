@@ -1,0 +1,18 @@
+{
+  "protected_files": 63,
+  "protected_unchanged": true,
+  "report_provenance_verified": [
+    "eda",
+    "analysis",
+    "cleaning_report",
+    "model_report",
+    "feature_examples"
+  ],
+  "executed_notebooks": [
+    "00_data_understanding.ipynb",
+    "01_outliers_and_noise.ipynb",
+    "02_data_split.ipynb",
+    "03_eda.ipynb"
+  ],
+  "local_markdown_links": "pass"
+}
